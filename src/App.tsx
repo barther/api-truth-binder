@@ -3,7 +3,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import { AppLayout } from "./components/AppLayout";
+import { DeskBoard } from "./components/DeskBoard";
+import { DispatchersPage } from "./pages/DispatchersPage";
+import { VacanciesPage } from "./pages/VacanciesPage";
+import { HoldDownsPage } from "./pages/HoldDownsPage";
+import { AuditPage } from "./pages/AuditPage";
+import { SettingsPage } from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -15,7 +21,14 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<AppLayout />}>
+            <Route index element={<DeskBoard />} />
+            <Route path="dispatchers" element={<DispatchersPage />} />
+            <Route path="vacancies" element={<VacanciesPage />} />
+            <Route path="hold-downs" element={<HoldDownsPage />} />
+            <Route path="audit" element={<AuditPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
