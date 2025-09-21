@@ -2,95 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Norfolk Southern NOC Dispatch Scheduling System Design System */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Norfolk Southern Brand Colors */
+    --ns-rich-black: 0 0% 0%;
+    --ns-riverbed: 210 95% 20%;
+    --ns-riverbed-light: 210 80% 35%;
+    --ns-riverbed-dark: 210 100% 11%;
+    --ns-gray-1: 46 15% 91%;
+    --ns-gray-2: 60 4% 74%;
+    --ns-gray-3: 120 1% 58%;
+    --ns-gray-4: 0 0% 43%;
+    --ns-gray-5: 0 2% 25%;
+    --ns-flame: 10 85% 47%;
+    --ns-flame-dark: 10 83% 33%;
+    --ns-lightning: 50 100% 50%;
+    --ns-lightning-dark: 45 59% 42%;
+    --ns-open-sky: 177 70% 45%;
+    --ns-open-sky-dark: 177 77% 24%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Theme Variables */
+    --background: var(--ns-rich-black);
+    --foreground: 0 0% 100%;
+    
+    --card: var(--ns-riverbed-dark);
+    --card-foreground: 0 0% 100%;
+    
+    --popover: var(--ns-riverbed);
+    --popover-foreground: 0 0% 100%;
+    
+    --primary: var(--ns-riverbed);
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: var(--ns-riverbed-light);
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: var(--ns-gray-5);
+    --muted-foreground: var(--ns-gray-2);
+    
+    --accent: var(--ns-flame);
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: var(--ns-flame);
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: var(--ns-gray-4);
+    --input: var(--ns-gray-5);
+    --ring: var(--ns-riverbed-light);
+    
+    /* Status Colors */
+    --success: var(--ns-open-sky);
+    --warning: var(--ns-lightning);
+    --danger: var(--ns-flame);
+    
+    /* Assignments Colors */
+    --assigned: var(--ns-open-sky);
+    --vacancy: var(--ns-flame);
+    --trainee: var(--ns-lightning);
+    --hold-down: var(--ns-riverbed-light);
+    
+    --radius: 8px;
+    
+    /* Shadows and Effects */
+    --shadow-sm: 0 2px 6px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.2);
+    
+    /* Animation Durations */
+    --transition-fast: 150ms;
+    --transition-normal: 300ms;
+    --transition-slow: 500ms;
   }
 }
 
