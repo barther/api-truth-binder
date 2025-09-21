@@ -60,8 +60,8 @@ export function VacanciesPage() {
 
   const fetchVacancies = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('vacancies', {
-        body: { start: startDate, end: endDate }
+      const { data, error } = await supabase.functions.invoke(`vacancies?start=${startDate}&end=${endDate}`, {
+        method: 'GET'
       })
 
       if (error) throw error
@@ -100,16 +100,21 @@ export function VacanciesPage() {
   const handleAwardVacancy = async (vacancy: Vacancy, dispatcherId: number) => {
     setAwarding(true)
     try {
-      const { data, error } = await supabase.functions.invoke('vacancies', {
+      const { data, error } = await supabase.functions.invoke(`vacancies/${vacancy.id}/award`, {
+        method: 'POST',
         body: {
-          action: 'award',
-          vacancyId: vacancy.id,
-          dispatcher_id: dispatcherId,
-          source: 'HOLD_DOWN'
+          dispatcher_id: dispatcherId
         }
       })
 
-      if (error) throw error
+      if (error) {
+        if (error.message?.includes('409')) {
+          throw new Error('Position is no longer vacant');
+        } else if (error.message?.includes('422')) {
+          throw new Error('Dispatcher is not qualified for this desk');
+        }
+        throw error;
+      }
 
       toast({
         title: "Success",
