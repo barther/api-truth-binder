@@ -23,27 +23,27 @@
     --ns-gray-4: 0 1% 43%;
     --ns-gray-5: 30 2% 25%;
 
-    /* System Colors */
-    --background: var(--ns-rich-black);
-    --foreground: 0 0% 100%;
-    --surface: var(--ns-riverbed);
-    --surface-light: var(--ns-riverbed-light);
-    --surface-dark: var(--ns-riverbed-dark);
+    /* Light Mode System Colors */
+    --background: 0 0% 98%;
+    --foreground: var(--ns-rich-black);
+    --surface: 0 0% 96%;
+    --surface-light: 0 0% 100%;
+    --surface-dark: 0 0% 94%;
 
-    --card: var(--ns-riverbed-dark);
-    --card-foreground: 0 0% 100%;
+    --card: 0 0% 100%;
+    --card-foreground: var(--ns-rich-black);
 
-    --popover: var(--ns-riverbed-dark);
-    --popover-foreground: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --popover-foreground: var(--ns-rich-black);
 
     --primary: var(--ns-riverbed);
     --primary-foreground: 0 0% 100%;
 
-    --secondary: var(--ns-gray-5);
-    --secondary-foreground: 0 0% 100%;
+    --secondary: var(--ns-gray-1);
+    --secondary-foreground: var(--ns-rich-black);
 
-    --muted: var(--ns-gray-4);
-    --muted-foreground: var(--ns-gray-2);
+    --muted: var(--ns-gray-1);
+    --muted-foreground: var(--ns-gray-4);
 
     --accent: var(--ns-lightning);
     --accent-foreground: var(--ns-rich-black);
@@ -57,13 +57,13 @@
     --warning: var(--ns-lightning);
     --warning-foreground: var(--ns-rich-black);
 
-    --border: var(--ns-gray-4);
-    --input: var(--ns-gray-5);
+    --border: var(--ns-gray-2);
+    --input: 0 0% 100%;
     --ring: var(--ns-riverbed-light);
 
     --radius: 8px;
 
-    /* Schedule Grid Colors */
+    /* Schedule Grid Colors - Lighter variants */
     --assigned: var(--ns-open-sky);
     --assigned-foreground: 0 0% 100%;
     --vacancy: var(--ns-flame);
@@ -73,20 +73,20 @@
     --hold-down: var(--ns-riverbed-light);
     --hold-down-foreground: 0 0% 100%;
 
-    /* Shadows and Effects */
+    /* Light Shadows and Effects */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-xl: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 
-    /* Sidebar */
-    --sidebar-background: var(--ns-riverbed-dark);
-    --sidebar-foreground: 0 0% 100%;
+    /* Light Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: var(--ns-rich-black);
     --sidebar-primary: var(--ns-riverbed);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: var(--ns-gray-5);
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: var(--ns-gray-4);
+    --sidebar-accent: var(--ns-gray-1);
+    --sidebar-accent-foreground: var(--ns-rich-black);
+    --sidebar-border: var(--ns-gray-2);
     --sidebar-ring: var(--ns-riverbed-light);
   }
 }
@@ -112,16 +112,16 @@
   }
 
   .schedule-header {
-    @apply sticky top-0 z-10 bg-surface text-foreground p-2 text-sm font-medium border border-border;
+    @apply sticky top-0 z-10 bg-card text-foreground p-2 text-sm font-medium border border-border shadow-sm;
   }
 
   .schedule-cell {
-    @apply min-h-16 border border-border p-2 text-xs relative;
+    @apply min-h-16 border border-border p-2 text-xs relative bg-card;
     transition: all 0.2s ease;
   }
 
   .schedule-cell:hover {
-    @apply ring-2 ring-ring;
+    @apply ring-2 ring-ring shadow-sm;
   }
 
   .assignment-chip {
