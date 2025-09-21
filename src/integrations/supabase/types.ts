@@ -14,7 +14,452 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      absences: {
+        Row: {
+          created_at: string | null
+          dispatcher_id: number
+          ends_at: string
+          id: number
+          note: string | null
+          starts_at: string
+          type: Database["public"]["Enums"]["absence_type"]
+        }
+        Insert: {
+          created_at?: string | null
+          dispatcher_id: number
+          ends_at: string
+          id?: number
+          note?: string | null
+          starts_at: string
+          type: Database["public"]["Enums"]["absence_type"]
+        }
+        Update: {
+          created_at?: string | null
+          dispatcher_id?: number
+          ends_at?: string
+          id?: number
+          note?: string | null
+          starts_at?: string
+          type?: Database["public"]["Enums"]["absence_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "absences_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "dispatchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignments: {
+        Row: {
+          created_at: string | null
+          created_by: number | null
+          deleted_at: string | null
+          dispatcher_id: number
+          ends_at: string
+          id: number
+          requires_trainer: boolean | null
+          source: Database["public"]["Enums"]["assignment_source"]
+          starts_at: string
+          trainer_id: number | null
+          trick_instance_id: number
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: number | null
+          deleted_at?: string | null
+          dispatcher_id: number
+          ends_at: string
+          id?: number
+          requires_trainer?: boolean | null
+          source?: Database["public"]["Enums"]["assignment_source"]
+          starts_at: string
+          trainer_id?: number | null
+          trick_instance_id: number
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: number | null
+          deleted_at?: string | null
+          dispatcher_id?: number
+          ends_at?: string
+          id?: number
+          requires_trainer?: boolean | null
+          source?: Database["public"]["Enums"]["assignment_source"]
+          starts_at?: string
+          trainer_id?: number | null
+          trick_instance_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "dispatchers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "dispatchers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "dispatchers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_trick_instance_id_fkey"
+            columns: ["trick_instance_id"]
+            isOneToOne: false
+            referencedRelation: "trick_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          actor: number | null
+          after_data: Json | null
+          before_data: Json | null
+          created_at: string | null
+          entity: string
+          entity_id: number
+          id: number
+        }
+        Insert: {
+          action: string
+          actor?: number | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string | null
+          entity: string
+          entity_id: number
+          id?: number
+        }
+        Update: {
+          action?: string
+          actor?: number | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string | null
+          entity?: string
+          entity_id?: number
+          id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_actor_fkey"
+            columns: ["actor"]
+            isOneToOne: false
+            referencedRelation: "dispatchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      desks: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: number
+          is_active: boolean | null
+          name: string
+          territory: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          name: string
+          territory?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          name?: string
+          territory?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      dispatchers: {
+        Row: {
+          badge: string
+          created_at: string | null
+          first_name: string
+          hire_date: string
+          id: number
+          is_active: boolean | null
+          last_name: string
+          rank: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          badge: string
+          created_at?: string | null
+          first_name: string
+          hire_date: string
+          id?: number
+          is_active?: boolean | null
+          last_name: string
+          rank?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          badge?: string
+          created_at?: string | null
+          first_name?: string
+          hire_date?: string
+          id?: number
+          is_active?: boolean | null
+          last_name?: string
+          rank?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      hold_downs: {
+        Row: {
+          actual_end: string | null
+          awarded_to: number | null
+          created_at: string | null
+          desk_id: number
+          id: number
+          projected_end: string
+          rule_blob: Json | null
+          starts_at: string
+          trick_id: number
+          vacancy_reason: Database["public"]["Enums"]["vacancy_reason"]
+        }
+        Insert: {
+          actual_end?: string | null
+          awarded_to?: number | null
+          created_at?: string | null
+          desk_id: number
+          id?: number
+          projected_end: string
+          rule_blob?: Json | null
+          starts_at: string
+          trick_id: number
+          vacancy_reason: Database["public"]["Enums"]["vacancy_reason"]
+        }
+        Update: {
+          actual_end?: string | null
+          awarded_to?: number | null
+          created_at?: string | null
+          desk_id?: number
+          id?: number
+          projected_end?: string
+          rule_blob?: Json | null
+          starts_at?: string
+          trick_id?: number
+          vacancy_reason?: Database["public"]["Enums"]["vacancy_reason"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hold_downs_awarded_to_fkey"
+            columns: ["awarded_to"]
+            isOneToOne: false
+            referencedRelation: "dispatchers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hold_downs_desk_id_fkey"
+            columns: ["desk_id"]
+            isOneToOne: false
+            referencedRelation: "desks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hold_downs_trick_id_fkey"
+            columns: ["trick_id"]
+            isOneToOne: false
+            referencedRelation: "tricks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qualifications: {
+        Row: {
+          created_at: string | null
+          desk_id: number
+          dispatcher_id: number
+          id: number
+          is_active: boolean | null
+          notes: string | null
+          qualified_on: string
+          trainer_id: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          desk_id: number
+          dispatcher_id: number
+          id?: number
+          is_active?: boolean | null
+          notes?: string | null
+          qualified_on: string
+          trainer_id?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          desk_id?: number
+          dispatcher_id?: number
+          id?: number
+          is_active?: boolean | null
+          notes?: string | null
+          qualified_on?: string
+          trainer_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qualifications_desk_id_fkey"
+            columns: ["desk_id"]
+            isOneToOne: false
+            referencedRelation: "desks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qualifications_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "dispatchers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qualifications_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "dispatchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seniority: {
+        Row: {
+          created_at: string | null
+          dispatcher_id: number
+          rank: string
+          tie_breaker: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dispatcher_id: number
+          rank: string
+          tie_breaker?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dispatcher_id?: number
+          rank?: string
+          tie_breaker?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seniority_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: true
+            referencedRelation: "dispatchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trick_instances: {
+        Row: {
+          created_at: string | null
+          ends_at: string
+          id: number
+          is_holiday: boolean | null
+          starts_at: string
+          trick_id: number
+        }
+        Insert: {
+          created_at?: string | null
+          ends_at: string
+          id?: number
+          is_holiday?: boolean | null
+          starts_at: string
+          trick_id: number
+        }
+        Update: {
+          created_at?: string | null
+          ends_at?: string
+          id?: number
+          is_holiday?: boolean | null
+          starts_at?: string
+          trick_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trick_instances_trick_id_fkey"
+            columns: ["trick_id"]
+            isOneToOne: false
+            referencedRelation: "tricks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tricks: {
+        Row: {
+          created_at: string | null
+          days_mask: unknown
+          desk_id: number
+          id: number
+          is_active: boolean | null
+          name: string
+          shift_end: string
+          shift_start: string
+          timezone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          days_mask: unknown
+          desk_id: number
+          id?: number
+          is_active?: boolean | null
+          name: string
+          shift_end: string
+          shift_start: string
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          days_mask?: unknown
+          desk_id?: number
+          id?: number
+          is_active?: boolean | null
+          name?: string
+          shift_end?: string
+          shift_start?: string
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tricks_desk_id_fkey"
+            columns: ["desk_id"]
+            isOneToOne: false
+            referencedRelation: "desks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +468,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      absence_type: "VACATION" | "SICK" | "FMLA" | "OOS" | "OTHER"
+      assignment_source: "BASE" | "HOLD_DOWN" | "ATW" | "OVERTIME"
+      vacancy_reason: "VAC" | "FMLA" | "TRAINING" | "OOS" | "UNKNOWN"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +597,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      absence_type: ["VACATION", "SICK", "FMLA", "OOS", "OTHER"],
+      assignment_source: ["BASE", "HOLD_DOWN", "ATW", "OVERTIME"],
+      vacancy_reason: ["VAC", "FMLA", "TRAINING", "OOS", "UNKNOWN"],
+    },
   },
 } as const
