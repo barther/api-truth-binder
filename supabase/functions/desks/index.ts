@@ -106,6 +106,62 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
+    } else if (req.method === 'POST') {
+      // Handle POST request for schedule with body parameters
+      const body = await req.json()
+      
+      if (body.action === 'schedule') {
+        const { deskId, start, end } = body
+
+        if (!deskId || !start || !end) {
+          return new Response(
+            JSON.stringify({ error: 'deskId, start and end are required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+
+        // Get trick instances with assignments for the desk and date range
+        const { data: schedule, error } = await supabaseClient
+          .from('trick_instances')
+          .select(`
+            *,
+            tricks!inner (
+              id,
+              desk_id,
+              name,
+              shift_start,
+              shift_end,
+              timezone
+            ),
+            assignments (
+              id,
+              dispatcher_id,
+              source,
+              requires_trainer,
+              trainer_id,
+              created_at,
+              deleted_at,
+              dispatchers (
+                id,
+                badge,
+                first_name,
+                last_name,
+                rank
+              )
+            )
+          `)
+          .eq('tricks.desk_id', deskId)
+          .gte('starts_at', start + 'T00:00:00Z')
+          .lte('starts_at', end + 'T23:59:59Z')
+          .is('assignments.deleted_at', null)
+          .order('starts_at')
+
+        if (error) throw error
+
+        return new Response(JSON.stringify(schedule), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
     }
 
     return new Response(

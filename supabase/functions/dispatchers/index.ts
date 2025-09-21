@@ -64,8 +64,18 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       } else {
-        // GET /dispatchers?q=search
-        const query = url.searchParams.get('q') || ''
+        // GET /dispatchers?q=search or POST with body
+        let query = url.searchParams.get('q') || ''
+        
+        // If it's a POST request, get query from body
+        if (req.method === 'POST' || (req.method === 'GET' && req.body)) {
+          try {
+            const body = await req.json()
+            query = body.q || query
+          } catch (e) {
+            // Ignore body parsing errors for GET requests
+          }
+        }
         
         let queryBuilder = supabaseClient
           .from('dispatchers')
@@ -104,6 +114,46 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
+    } else if (req.method === 'POST') {
+      // Handle POST request for searching with body
+      const { q = '' } = await req.json()
+      
+      let queryBuilder = supabaseClient
+        .from('dispatchers')
+        .select(`
+          *,
+          qualifications (
+            id,
+            desk_id,
+            qualified_on,
+            desks (
+              id,
+              code,
+              name
+            )
+          ),
+          seniority (
+            rank,
+            tie_breaker
+          )
+        `)
+        .eq('is_active', true)
+        .order('last_name')
+
+      // Apply search filter if provided
+      if (q.trim()) {
+        queryBuilder = queryBuilder.or(
+          `first_name.ilike.%${q}%,last_name.ilike.%${q}%,badge.ilike.%${q}%`
+        )
+      }
+
+      const { data: dispatchers, error } = await queryBuilder
+
+      if (error) throw error
+
+      return new Response(JSON.stringify(dispatchers), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
     return new Response(

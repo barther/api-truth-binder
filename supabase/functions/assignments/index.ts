@@ -187,8 +187,18 @@ serve(async (req) => {
       })
 
     } else if (req.method === 'DELETE') {
-      // DELETE /assignments/:id
-      const assignmentId = parseInt(pathParts[2])
+      // DELETE /assignments/:id or via body
+      let assignmentId = pathParts[2] ? parseInt(pathParts[2]) : null
+      
+      // If no ID in path, try to get from body
+      if (!assignmentId) {
+        try {
+          const body = await req.json()
+          assignmentId = body.id
+        } catch (e) {
+          // Continue with null assignmentId to trigger error below
+        }
+      }
       
       if (!assignmentId) {
         return new Response(

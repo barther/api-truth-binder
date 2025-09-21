@@ -110,20 +110,16 @@ export function DeskBoard() {
 
   const fetchSchedule = async (deskId: number) => {
     try {
-      const { data, error } = await supabase.functions.invoke('desks', {
-        body: null,
-        method: 'GET'
-      })
-      
-      if (error) throw error
-
-      // Fetch schedule for the specific desk
       const { data: scheduleData, error: scheduleError } = await supabase.functions.invoke('desks', {
-        body: { deskId, start: startDate, end: endDate }
+        body: { 
+          action: 'schedule',
+          deskId, 
+          start: startDate, 
+          end: endDate 
+        }
       })
       
       if (scheduleError) throw scheduleError
-
       setSchedule(scheduleData || [])
     } catch (error) {
       console.error('Error fetching schedule:', error)

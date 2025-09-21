@@ -99,19 +99,11 @@ export function AssignmentDialog({
   const searchDispatchers = async (query: string) => {
     setSearchLoading(true)
     try {
-      const response = await fetch(
-        `https://rxvptkcgqftxfishbuta.supabase.co/functions/v1/dispatchers?q=${encodeURIComponent(query)}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${supabase.supabaseKey}`,
-            'apikey': supabase.supabaseKey
-          }
-        }
-      )
+      const { data, error } = await supabase.functions.invoke('dispatchers', {
+        body: { q: query }
+      })
 
-      if (!response.ok) throw new Error('Failed to search dispatchers')
-
-      const data = await response.json()
+      if (error) throw error
       
       // Filter to only show dispatchers qualified for this desk
       const qualifiedDispatchers = data.filter((dispatcher: Dispatcher) =>
@@ -157,29 +149,18 @@ export function AssignmentDialog({
 
     setLoading(true)
     try {
-      const response = await fetch(
-        'https://rxvptkcgqftxfishbuta.supabase.co/functions/v1/assignments',
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${supabase.supabaseKey}`,
-            'apikey': supabase.supabaseKey,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            trick_instance_id: trickInstance.id,
-            dispatcher_id: selectedDispatcher.id,
-            source,
-            requires_trainer: requiresTrainer,
-            trainer_id: requiresTrainer ? parseInt(selectedTrainer) : null
-          })
+      const { data, error } = await supabase.functions.invoke('assignments', {
+        body: {
+          trick_instance_id: trickInstance.id,
+          dispatcher_id: selectedDispatcher.id,
+          source,
+          requires_trainer: requiresTrainer,
+          trainer_id: requiresTrainer ? parseInt(selectedTrainer) : null
         }
-      )
+      })
 
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to create assignment')
+      if (error) {
+        throw new Error(error.message || 'Failed to create assignment')
       }
 
       toast({
@@ -205,20 +186,13 @@ export function AssignmentDialog({
 
     setLoading(true)
     try {
-      const response = await fetch(
-        `https://rxvptkcgqftxfishbuta.supabase.co/functions/v1/assignments/${currentAssignment.id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${supabase.supabaseKey}`,
-            'apikey': supabase.supabaseKey
-          }
-        }
-      )
+      const { error } = await supabase.functions.invoke('assignments', {
+        body: { id: currentAssignment.id },
+        method: 'DELETE'
+      })
 
-      if (!response.ok) {
-        const result = await response.json()
-        throw new Error(result.error || 'Failed to remove assignment')
+      if (error) {
+        throw new Error(error.message || 'Failed to remove assignment')
       }
 
       toast({
