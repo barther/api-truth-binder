@@ -78,6 +78,7 @@
     --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
     --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --shadow-xl: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-colored: 0 4px 14px 0 rgba(32, 120, 153, 0.15);
 
     /* Light Sidebar */
     --sidebar-background: 0 0% 100%;
@@ -88,6 +89,11 @@
     --sidebar-accent-foreground: var(--ns-rich-black);
     --sidebar-border: var(--ns-gray-2);
     --sidebar-ring: var(--ns-riverbed-light);
+
+    /* Color Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--ns-riverbed)), hsl(var(--ns-riverbed-light)));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--ns-open-sky)), hsl(var(--ns-lightning)));
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--surface)));
   }
 }
 
@@ -112,7 +118,7 @@
   }
 
   .schedule-header {
-    @apply sticky top-0 z-10 bg-card text-foreground p-2 text-sm font-medium border border-border shadow-sm;
+    @apply sticky top-0 z-10 bg-card text-foreground p-2 text-sm font-medium border border-border shadow-sm accent-border;
   }
 
   .schedule-cell {
@@ -121,7 +127,7 @@
   }
 
   .schedule-cell:hover {
-    @apply ring-2 ring-ring shadow-sm;
+    @apply ring-2 ring-ring shadow-sm colored-shadow;
   }
 
   .assignment-chip {
@@ -221,5 +227,41 @@
 
   .border-brand {
     border-color: hsl(var(--primary));
+  }
+
+  /* Color accent utilities */
+  .accent-border {
+    border-left: 4px solid hsl(var(--primary));
+  }
+
+  .gradient-header {
+    background: var(--gradient-subtle);
+    border-bottom: 1px solid hsl(var(--primary) / 0.2);
+  }
+
+  .colored-shadow {
+    box-shadow: var(--shadow-colored);
+  }
+
+  .hover-accent:hover {
+    color: hsl(var(--primary));
+    transition: color 0.2s ease;
+  }
+
+  .bg-gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .bg-gradient-accent {
+    background: var(--gradient-accent);
+  }
+
+  /* Enhanced button variants */
+  .btn-accent {
+    @apply bg-accent text-accent-foreground hover:bg-accent/90;
+  }
+
+  .btn-success {
+    @apply bg-success text-success-foreground hover:bg-success/90;
   }
 }

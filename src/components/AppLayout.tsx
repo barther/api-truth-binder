@@ -9,14 +9,14 @@ export function AppLayout() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <main className="flex-1">
-          <header className="h-12 flex items-center border-b border-border bg-card pr-6 pl-0">
+          <header className="h-12 flex items-center gradient-header pr-6 pl-0">
             <div className="flex items-center space-x-3">
               <img 
                 src={horseIcon} 
                 alt="Norfolk Southern Logo" 
-                className="h-8 w-8"
+                className="h-8 w-8 ml-4"
               />
-              <h1 className="font-semibold text-card-foreground">
+              <h1 className="font-semibold text-brand">
                 Norfolk Southern - NOC Dispatch Scheduler
               </h1>
             </div>
