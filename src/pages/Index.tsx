@@ -1,6 +1,7 @@
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/AppSidebar"
 import { DeskBoard } from "@/components/DeskBoard"
+import horseIcon from "@/assets/horse.svg"
 
 const Index = () => {
   return (
@@ -9,9 +10,16 @@ const Index = () => {
         <AppSidebar />
         <main className="flex-1">
           <header className="h-12 flex items-center border-b border-border bg-card px-6">
-            <h1 className="font-semibold text-card-foreground">
-              Norfolk Southern - NOC Dispatch Scheduler
-            </h1>
+            <div className="flex items-center space-x-3">
+              <img 
+                src={horseIcon} 
+                alt="Norfolk Southern Logo" 
+                className="h-8 w-8"
+              />
+              <h1 className="font-semibold text-card-foreground">
+                Norfolk Southern - NOC Dispatch Scheduler
+              </h1>
+            </div>
           </header>
           <div className="p-6">
             <DeskBoard />
