@@ -2,78 +2,92 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Norfolk Southern NOC Dispatch Scheduling System Design System */
+/* Norfolk Southern Railroad Scheduling System Design System */
 
 @layer base {
   :root {
-    /* Norfolk Southern Brand Colors */
+    /* Norfolk Southern Brand Colors - converted to HSL */
     --ns-rich-black: 0 0% 0%;
-    --ns-riverbed: 210 95% 20%;
-    --ns-riverbed-light: 210 80% 35%;
-    --ns-riverbed-dark: 210 100% 11%;
-    --ns-gray-1: 46 15% 91%;
-    --ns-gray-2: 60 4% 74%;
-    --ns-gray-3: 120 1% 58%;
-    --ns-gray-4: 0 0% 43%;
-    --ns-gray-5: 0 2% 25%;
-    --ns-flame: 10 85% 47%;
-    --ns-flame-dark: 10 83% 33%;
-    --ns-lightning: 50 100% 50%;
-    --ns-lightning-dark: 45 59% 42%;
-    --ns-open-sky: 177 70% 45%;
-    --ns-open-sky-dark: 177 77% 24%;
+    --ns-riverbed: 201 95% 20%;
+    --ns-riverbed-light: 202 72% 34%;
+    --ns-riverbed-dark: 202 100% 11%;
+    --ns-flame: 11 84% 47%;
+    --ns-flame-dark: 11 81% 34%;
+    --ns-lightning: 49 100% 50%;
+    --ns-lightning-dark: 42 51% 41%;
+    --ns-open-sky: 178 73% 45%;
+    --ns-open-sky-dark: 177 73% 32%;
+    --ns-gray-1: 60 14% 90%;
+    --ns-gray-2: 55 7% 74%;
+    --ns-gray-3: 120 2% 58%;
+    --ns-gray-4: 0 1% 43%;
+    --ns-gray-5: 30 2% 25%;
 
-    /* Theme Variables */
+    /* System Colors */
     --background: var(--ns-rich-black);
     --foreground: 0 0% 100%;
-    
+    --surface: var(--ns-riverbed);
+    --surface-light: var(--ns-riverbed-light);
+    --surface-dark: var(--ns-riverbed-dark);
+
     --card: var(--ns-riverbed-dark);
     --card-foreground: 0 0% 100%;
-    
-    --popover: var(--ns-riverbed);
+
+    --popover: var(--ns-riverbed-dark);
     --popover-foreground: 0 0% 100%;
-    
+
     --primary: var(--ns-riverbed);
     --primary-foreground: 0 0% 100%;
-    
-    --secondary: var(--ns-riverbed-light);
+
+    --secondary: var(--ns-gray-5);
     --secondary-foreground: 0 0% 100%;
-    
-    --muted: var(--ns-gray-5);
+
+    --muted: var(--ns-gray-4);
     --muted-foreground: var(--ns-gray-2);
-    
-    --accent: var(--ns-flame);
-    --accent-foreground: 0 0% 100%;
-    
+
+    --accent: var(--ns-lightning);
+    --accent-foreground: var(--ns-rich-black);
+
     --destructive: var(--ns-flame);
     --destructive-foreground: 0 0% 100%;
-    
+
+    --success: var(--ns-open-sky);
+    --success-foreground: 0 0% 100%;
+
+    --warning: var(--ns-lightning);
+    --warning-foreground: var(--ns-rich-black);
+
     --border: var(--ns-gray-4);
     --input: var(--ns-gray-5);
     --ring: var(--ns-riverbed-light);
-    
-    /* Status Colors */
-    --success: var(--ns-open-sky);
-    --warning: var(--ns-lightning);
-    --danger: var(--ns-flame);
-    
-    /* Assignments Colors */
-    --assigned: var(--ns-open-sky);
-    --vacancy: var(--ns-flame);
-    --trainee: var(--ns-lightning);
-    --hold-down: var(--ns-riverbed-light);
-    
+
     --radius: 8px;
-    
+
+    /* Schedule Grid Colors */
+    --assigned: var(--ns-open-sky);
+    --assigned-foreground: 0 0% 100%;
+    --vacancy: var(--ns-flame);
+    --vacancy-foreground: 0 0% 100%;
+    --trainee: var(--ns-lightning);
+    --trainee-foreground: var(--ns-rich-black);
+    --hold-down: var(--ns-riverbed-light);
+    --hold-down-foreground: 0 0% 100%;
+
     /* Shadows and Effects */
-    --shadow-sm: 0 2px 6px rgba(0,0,0,0.1);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
-    --shadow-lg: 0 8px 24px rgba(0,0,0,0.2);
-    
-    /* Animation Durations */
-    --transition-fast: 150ms;
-    --transition-normal: 300ms;
-    --transition-slow: 500ms;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+    /* Sidebar */
+    --sidebar-background: var(--ns-riverbed-dark);
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: var(--ns-riverbed);
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: var(--ns-gray-5);
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: var(--ns-gray-4);
+    --sidebar-ring: var(--ns-riverbed-light);
   }
 }
 
@@ -83,6 +97,129 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold;
+  }
+
+  /* Schedule Grid Styles */
+  .schedule-grid {
+    @apply grid gap-1 p-4;
+    grid-template-columns: 120px repeat(7, 1fr);
+  }
+
+  .schedule-header {
+    @apply sticky top-0 z-10 bg-surface text-foreground p-2 text-sm font-medium border border-border;
+  }
+
+  .schedule-cell {
+    @apply min-h-16 border border-border p-2 text-xs relative;
+    transition: all 0.2s ease;
+  }
+
+  .schedule-cell:hover {
+    @apply ring-2 ring-ring;
+  }
+
+  .assignment-chip {
+    @apply rounded px-2 py-1 text-xs font-medium cursor-pointer;
+    transition: all 0.2s ease;
+  }
+
+  .assignment-chip:hover {
+    @apply scale-105 shadow-md;
+  }
+
+  .assignment-chip.assigned {
+    @apply bg-success text-success-foreground;
+  }
+
+  .assignment-chip.vacancy {
+    @apply bg-destructive text-destructive-foreground;
+  }
+
+  .assignment-chip.trainee {
+    @apply bg-warning text-warning-foreground;
+  }
+
+  .assignment-chip.hold-down {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  /* Status indicators */
+  .status-dot {
+    @apply w-2 h-2 rounded-full inline-block mr-2;
+  }
+
+  .status-dot.active {
+    @apply bg-success;
+  }
+
+  .status-dot.inactive {
+    @apply bg-muted;
+  }
+
+  .status-dot.absent {
+    @apply bg-destructive;
+  }
+
+  /* Animations */
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Form improvements */
+  .form-field {
+    @apply space-y-2;
+  }
+
+  .form-label {
+    @apply text-sm font-medium text-foreground;
+  }
+
+  .form-input {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Utility classes */
+  .text-brand {
+    color: hsl(var(--primary));
+  }
+
+  .bg-brand {
+    background-color: hsl(var(--primary));
+  }
+
+  .border-brand {
+    border-color: hsl(var(--primary));
   }
 }

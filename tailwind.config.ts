@@ -19,6 +19,11 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        surface: {
+          DEFAULT: "hsl(var(--surface))",
+          light: "hsl(var(--surface-light))",
+          dark: "hsl(var(--surface-dark))",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -30,6 +35,14 @@ export default {
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -46,6 +59,22 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        assigned: {
+          DEFAULT: "hsl(var(--assigned))",
+          foreground: "hsl(var(--assigned-foreground))",
+        },
+        vacancy: {
+          DEFAULT: "hsl(var(--vacancy))",
+          foreground: "hsl(var(--vacancy-foreground))",
+        },
+        trainee: {
+          DEFAULT: "hsl(var(--trainee))",
+          foreground: "hsl(var(--trainee-foreground))",
+        },
+        "hold-down": {
+          DEFAULT: "hsl(var(--hold-down))",
+          foreground: "hsl(var(--hold-down-foreground))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
