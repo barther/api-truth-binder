@@ -1,0 +1,44 @@
+/* ===================================================================
+   Norfolk Southern – App Design System (CSS)
+   Source: Brand Identity + Guidelines (2024)
+   =================================================================== */
+
+/* 1) COLOR TOKENS --------------------------------------------------- */
+:root {
+  --ns-rich-black: #000000;
+  --ns-riverbed: #034764;
+  --ns-gray-1: #E7E7E2;
+
+  --ns-flame: #DD3113;
+  --ns-riverbed-light: #166B95;
+  --ns-riverbed-dark: #00253B;
+  --ns-lightning: #FFCB00;
+  --ns-lightning-dark: #A38D31;
+  --ns-flame-dark: #9E280E;
+  --ns-open-sky: #22BCB5;
+  --ns-open-sky-dark: #027B75;
+
+  --ns-gray-2: #BCBEBB;
+  --ns-gray-3: #949594;
+  --ns-gray-4: #6D6E6E;
+  --ns-gray-5: #414040;
+
+  --bg: var(--ns-rich-black);
+  --surface: var(--ns-riverbed);
+  --surface-alt: var(--ns-gray-1);
+  --text: #ffffff;
+  --text-invert: var(--ns-rich-black);
+  --brand: var(--ns-riverbed);
+  --brand-accent: var(--ns-flame);
+  --ok: var(--ns-open-sky);
+  --warn: var(--ns-lightning);
+  --danger: var(--ns-flame);
+
+  --radius: 14px;
+  --elev-1: 0 2px 6px rgba(0,0,0,.2);
+  --elev-2: 0 8px 24px rgba(0,0,0,.3);
+
+  --ns-angle: 19deg;
+}
+
+/* ... (full CSS from previous response continues here) ... */

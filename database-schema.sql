@@ -1,0 +1,4 @@
+-- =====================================================================
+-- NOC Dispatch Scheduling System — Schema v1.1 (PostgreSQL 15+)
+-- =====================================================================
+-- (content truncated for brevity in this snippet; full schema goes here)
