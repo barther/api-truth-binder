@@ -65,6 +65,7 @@ export type Database = {
           starts_at: string
           trainer_id: number | null
           trick_instance_id: number
+          version: number | null
         }
         Insert: {
           created_at?: string | null
@@ -78,6 +79,7 @@ export type Database = {
           starts_at: string
           trainer_id?: number | null
           trick_instance_id: number
+          version?: number | null
         }
         Update: {
           created_at?: string | null
@@ -91,6 +93,7 @@ export type Database = {
           starts_at?: string
           trainer_id?: number | null
           trick_instance_id?: number
+          version?: number | null
         }
         Relationships: [
           {
@@ -122,6 +125,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      atw_jobs: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          desk_id: number | null
+          id: number
+          is_active: boolean | null
+          required_rank: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          desk_id?: number | null
+          id?: number
+          is_active?: boolean | null
+          required_rank?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          desk_id?: number | null
+          id?: number
+          is_active?: boolean | null
+          required_rank?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       audit_logs: {
         Row: {
