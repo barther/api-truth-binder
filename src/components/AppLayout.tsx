@@ -9,7 +9,7 @@ export function AppLayout() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <main className="flex-1">
-          <header className="h-12 flex items-center border-b border-border bg-card px-6">
+          <header className="h-12 flex items-center border-b border-border bg-card pr-6 pl-0">
             <div className="flex items-center space-x-3">
               <img 
                 src={horseIcon} 
