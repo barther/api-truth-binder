@@ -92,17 +92,16 @@ serve(async (req) => {
     }
 
     if (req.method === 'PATCH') {
-      // PATCH /admin-desks/{id} - Update a desk
-      const deskId = pathParts[1];
+      // PATCH /admin-desks - Update a desk (ID in body)
+      const body = await req.json();
+      const { id: deskId, code, name, division, is_active } = body;
+      
       if (!deskId) {
         return new Response(JSON.stringify({ error: 'Desk ID required' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
-
-      const body = await req.json();
-      const { code, name, division, is_active } = body;
 
       const updateData: any = {};
       if (code !== undefined) updateData.code = code;

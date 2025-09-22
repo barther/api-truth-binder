@@ -116,7 +116,10 @@ export default function AdminDesksPage() {
     try {
       const { data, error } = await supabase.functions.invoke('admin-desks', {
         method: 'PATCH',
-        body: deskForm
+        body: {
+          id: selectedDesk.id,
+          ...deskForm
+        }
       })
       
       if (error) {
