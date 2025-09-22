@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        'franklin': ['Libre Franklin', 'Franklin Gothic', 'Arial Narrow', 'Arial', 'sans-serif'],
+        'sans': ['Libre Franklin', 'Franklin Gothic', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
