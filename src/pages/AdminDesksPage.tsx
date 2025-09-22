@@ -49,29 +49,22 @@ export default function AdminDesksPage() {
     try {
       setLoading(true)
       
-      // Load divisions - use direct database query since we have new schema
-      const { data: divisionsData, error: divisionsError } = await supabase
-        .from('divisions')
-        .select('*')
+      const { data, error } = await supabase.functions.invoke('admin-desks', {
+        method: 'GET'
+      })
       
-      if (divisionsError) {
-        console.error('Error loading divisions:', divisionsError)
-      } else if (divisionsData) {
-        setDivisions(divisionsData)
-      }
-      
-      // Load desks - use direct database query
-      const { data: desksData, error: desksError } = await supabase
-        .from('desks')
-        .select('*')
-        .order('code')
-      
-      if (desksError) {
-        console.error('Error loading desks:', desksError)
-      } else if (desksData) {
-        setDesks(desksData)
-        if (desksData.length > 0 && !selectedDesk) {
-          setSelectedDesk(desksData[0])
+      if (error) {
+        console.error('Error loading data:', error)
+        toast({
+          title: "Error",
+          description: "Failed to load desk data",
+          variant: "destructive"
+        })
+      } else if (data) {
+        setDivisions(data.divisions || [])
+        setDesks(data.desks || [])
+        if (data.desks && data.desks.length > 0 && !selectedDesk) {
+          setSelectedDesk(data.desks[0])
         }
       }
     } catch (error) {
@@ -90,21 +83,20 @@ export default function AdminDesksPage() {
     try {
       console.log('Creating desk with form data:', deskForm)
       
-      const { data, error } = await supabase
-        .from('desks')
-        .insert([deskForm])
-        .select()
-        .single()
+      const { data, error } = await supabase.functions.invoke('admin-desks', {
+        method: 'POST',
+        body: deskForm
+      })
       
       if (error) {
-        console.error('Supabase error creating desk:', error)
-        throw error
+        console.error('Error creating desk:', error)
+        throw new Error(error.message || 'Failed to create desk')
       }
       
-      if (data) {
-        console.log('Desk created successfully:', data)
-        setDesks(prev => [...prev, data])
-        setSelectedDesk(data)
+      if (data && data.desk) {
+        console.log('Desk created successfully:', data.desk)
+        setDesks(prev => [...prev, data.desk])
+        setSelectedDesk(data.desk)
         setIsNewDeskDialogOpen(false)
         setDeskForm({ code: "", name: "", division: "", is_active: true })
         toast({ title: "Success", description: "Desk created successfully" })
@@ -122,20 +114,18 @@ export default function AdminDesksPage() {
   const updateDesk = async () => {
     if (!selectedDesk) return
     try {
-      const { data, error } = await supabase
-        .from('desks')
-        .update(deskForm)
-        .eq('id', selectedDesk.id)
-        .select()
-        .single()
+      const { data, error } = await supabase.functions.invoke('admin-desks', {
+        method: 'PATCH',
+        body: deskForm
+      })
       
       if (error) {
-        throw error
+        throw new Error(error.message || 'Failed to update desk')
       }
       
-      if (data) {
-        setDesks(prev => prev.map(d => d.id === selectedDesk.id ? data : d))
-        setSelectedDesk(data)
+      if (data && data.desk) {
+        setDesks(prev => prev.map(d => d.id === selectedDesk.id ? data.desk : d))
+        setSelectedDesk(data.desk)
         toast({ title: "Success", description: "Desk updated successfully" })
       }
     } catch (error: any) {
