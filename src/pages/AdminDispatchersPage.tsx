@@ -179,7 +179,7 @@ export default function AdminDispatchersPage() {
       dispatcher.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       dispatcher.emp_id.toLowerCase().includes(searchQuery.toLowerCase())
     
-    const matchesDivision = !selectedDivision || 
+    const matchesDivision = !selectedDivision || selectedDivision === "all" || 
       dispatcher.dispatcher_current_division?.divisions?.code === selectedDivision
 
     return matchesSearch && matchesDivision
@@ -288,7 +288,7 @@ export default function AdminDispatchersPage() {
                 <SelectValue placeholder="All Divisions" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Divisions</SelectItem>
+                <SelectItem value="all">All Divisions</SelectItem>
                 {divisions.map(division => (
                   <SelectItem key={division.division_id} value={division.code}>
                     {division.code} - {division.name}
