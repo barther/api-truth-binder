@@ -1,4 +1,4 @@
-import { Calendar, Users, Clock, AlertTriangle, FileText, Settings, RotateCw } from "lucide-react"
+import { Calendar, Users, Clock, AlertTriangle, FileText, Settings, RotateCcw } from "lucide-react"
 import { NavLink } from "react-router-dom"
 import {
   Sidebar,
@@ -19,7 +19,7 @@ const navigationItems = [
   { title: "Tricks", url: "/tricks", icon: Clock },
   { title: "Vacancies", url: "/vacancies", icon: AlertTriangle },
   { title: "Hold-Downs", url: "/hold-downs", icon: Clock },
-  { title: "ATW Jobs", url: "/atw", icon: RotateCw },
+  { title: "ATW Jobs", url: "/atw", icon: RotateCcw },
   { title: "Audit Log", url: "/audit", icon: FileText },
   { title: "Settings", url: "/settings", icon: Settings },
 ]
@@ -56,6 +56,7 @@ export function AppSidebar() {
                             : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                         }`
                       }
+                      title={item.title === "ATW Jobs" ? "Around The World - Third-shift relief positions" : item.title}
                     >
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}

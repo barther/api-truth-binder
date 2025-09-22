@@ -20,15 +20,13 @@ interface ATWPolicy {
   }
 }
 
-interface PlanRow {
+interface PlanEntry {
   date: string
   desk_id: number
   trick_instance_id: number
   starts_at: string
   ends_at: string
 }
-
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -42,31 +40,13 @@ serve(async (req) => {
     )
 
     const url = new URL(req.url)
-    const pathParts = url.pathname.split('/').filter(p => p)
-    
-    console.log('ATW function called:', req.method, url.pathname)
+    const pathParts = url.pathname.split('/')
+    console.log('ATW function called with path:', url.pathname, 'method:', req.method)
 
     if (req.method === 'GET') {
-      if (pathParts.length === 1) {
-        // GET /atw → list all ATW jobs
-        const { data: atwJobs, error } = await supabaseClient
-          .from('atw_jobs')
-          .select('*')
-          .order('label')
-
-        if (error) {
-          console.error('Error fetching ATW jobs:', error)
-          throw error
-        }
-
-        return new Response(JSON.stringify(atwJobs), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      } 
-      
-      if (pathParts.length === 3 && pathParts[2] === 'plan') {
+      if (pathParts[3] === 'plan' && pathParts[2]) {
         // GET /atw/:id/plan?start=YYYY-MM-DD&end=YYYY-MM-DD
-        const atwJobId = parseInt(pathParts[1])
+        const atwJobId = parseInt(pathParts[2])
         const start = url.searchParams.get('start')
         const end = url.searchParams.get('end')
 
@@ -77,7 +57,7 @@ serve(async (req) => {
           )
         }
 
-        // Get ATW job
+        // Get the ATW job policy
         const { data: atwJob, error: atwError } = await supabaseClient
           .from('atw_jobs')
           .select('*')
@@ -86,97 +66,91 @@ serve(async (req) => {
           .single()
 
         if (atwError || !atwJob) {
-          console.error('ATW job not found:', atwError)
           return new Response(
-            JSON.stringify({ error: 'ATW job not found' }),
+            JSON.stringify({ error: 'ATW job not found or inactive' }),
             { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           )
         }
 
         const policy = atwJob.policy as ATWPolicy
-        const plan: PlanRow[] = []
-
-        // Generate date range
+        
+        // Generate plan for date range
+        const plan: PlanEntry[] = []
         const startDate = new Date(start + 'T00:00:00Z')
         const endDate = new Date(end + 'T23:59:59Z')
         
         for (let date = new Date(startDate); date <= endDate; date.setUTCDate(date.getUTCDate() + 1)) {
-          const weekday = WEEKDAYS[date.getUTCDay()] as keyof ATWPolicy['days']
+          const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+          const weekday = weekdays[date.getUTCDay()] as keyof ATWPolicy['days']
           const deskId = policy.days[weekday]
           
-          if (deskId === null) {
-            continue // Skip days with no desk assignment
-          }
-
+          if (deskId === null) continue // No work this day
+          
           // Find third-shift trick for this desk
           const { data: tricks, error: tricksError } = await supabaseClient
             .from('tricks')
             .select('*')
             .eq('desk_id', deskId)
             .eq('is_active', true)
+            .order('id')
 
-          if (tricksError || !tricks?.length) {
-            console.warn(`No tricks found for desk ${deskId}`)
-            continue
-          }
+          if (tricksError || !tricks?.length) continue
 
-          // Find third-shift trick using canonical resolution order
-          let thirdShiftTrick = null
+          // Find third-shift trick (overnight shift_end <= shift_start preferred, then name contains "3rd")
+          let thirdShiftTrick = tricks.find(t => {
+            // Parse time values
+            const startTime = t.shift_start.split(':').map((n: string) => parseInt(n))
+            const endTime = t.shift_end.split(':').map((n: string) => parseInt(n))
+            const startMinutes = startTime[0] * 60 + startTime[1]
+            const endMinutes = endTime[0] * 60 + endTime[1]
+            return endMinutes <= startMinutes // Overnight shift
+          })
           
-          // 1. Prefer overnight tricks (shift_end <= shift_start)
-          const overnightTricks = tricks.filter(t => t.shift_end <= t.shift_start)
-          if (overnightTricks.length > 0) {
-            thirdShiftTrick = overnightTricks.sort((a, b) => a.id - b.id)[0]
-          } else {
-            // 2. Look for tricks with "3rd" in name (case-insensitive)
-            const namedThirdShift = tricks.filter(t => t.name.toLowerCase().includes('3rd'))
-            if (namedThirdShift.length > 0) {
-              thirdShiftTrick = namedThirdShift.sort((a, b) => a.id - b.id)[0]
-            } else {
-              // 3. Fallback to lowest ID
-              thirdShiftTrick = tricks.sort((a, b) => a.id - b.id)[0]
-            }
-          }
-
           if (!thirdShiftTrick) {
-            console.warn(`No third-shift trick found for desk ${deskId}`)
-            continue
+            thirdShiftTrick = tricks.find(t => t.name.toLowerCase().includes('3rd'))
           }
+          
+          if (!thirdShiftTrick) continue
 
-          // Find trick instances for this date
+          // Find trick instance for this date
           const dateStr = date.toISOString().split('T')[0]
           const { data: instances, error: instancesError } = await supabaseClient
             .from('trick_instances')
             .select('*')
             .eq('trick_id', thirdShiftTrick.id)
             .gte('starts_at', dateStr + 'T00:00:00Z')
-            .lt('starts_at', dateStr + 'T23:59:59Z')
+            .lte('starts_at', dateStr + 'T23:59:59Z')
 
-          if (instancesError) {
-            console.error('Error fetching trick instances:', instancesError)
-            continue
-          }
+          if (instancesError || !instances?.length) continue
 
-          // Add all instances for this date to the plan
-          for (const instance of instances || []) {
-            plan.push({
-              date: dateStr,
-              desk_id: deskId,
-              trick_instance_id: instance.id,
-              starts_at: instance.starts_at,
-              ends_at: instance.ends_at
-            })
-          }
+          const instance = instances[0]
+          plan.push({
+            date: dateStr,
+            desk_id: deskId,
+            trick_instance_id: instance.id,
+            starts_at: instance.starts_at,
+            ends_at: instance.ends_at
+          })
         }
 
         return new Response(JSON.stringify({ plan }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
+      } else {
+        // GET /atw - list all ATW jobs
+        const { data: jobs, error } = await supabaseClient
+          .from('atw_jobs')
+          .select('*')
+          .order('label')
+
+        if (error) throw error
+
+        return new Response(JSON.stringify(jobs), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
       }
-    } 
-    
-    if (req.method === 'POST') {
-      // POST /atw → create new ATW job
+    } else if (req.method === 'POST') {
+      // POST /atw - create new ATW job
       const body = await req.json()
       const { label, is_active = true, policy } = body
 
@@ -187,46 +161,55 @@ serve(async (req) => {
         )
       }
 
-      const { data: atwJob, error } = await supabaseClient
+      // Validate policy structure
+      if (policy.variant !== 'third_shift_weekly_map' || !policy.days) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid policy structure' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      const { data: job, error } = await supabaseClient
         .from('atw_jobs')
         .insert({ label, is_active, policy })
         .select()
         .single()
 
-      if (error) {
-        console.error('Error creating ATW job:', error)
-        throw error
-      }
+      if (error) throw error
 
-      return new Response(JSON.stringify(atwJob), {
+      return new Response(JSON.stringify(job), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
-    }
-    
-    if (req.method === 'PATCH') {
-      // PATCH /atw/:id → update ATW job
-      const atwJobId = parseInt(pathParts[1])
+    } else if (req.method === 'PATCH') {
+      // PATCH /atw/:id - update ATW job
+      const atwJobId = parseInt(pathParts[2])
       const body = await req.json()
       const { label, is_active, policy } = body
 
-      const updateData: any = {}
-      if (label !== undefined) updateData.label = label
-      if (is_active !== undefined) updateData.is_active = is_active
-      if (policy !== undefined) updateData.policy = policy
+      const updates: any = {}
+      if (label !== undefined) updates.label = label
+      if (is_active !== undefined) updates.is_active = is_active
+      if (policy !== undefined) {
+        // Validate policy structure if provided
+        if (policy.variant !== 'third_shift_weekly_map' || !policy.days) {
+          return new Response(
+            JSON.stringify({ error: 'Invalid policy structure' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        updates.policy = policy
+      }
 
-      const { data: atwJob, error } = await supabaseClient
+      const { data: job, error } = await supabaseClient
         .from('atw_jobs')
-        .update(updateData)
+        .update(updates)
         .eq('id', atwJobId)
         .select()
         .single()
 
-      if (error) {
-        console.error('Error updating ATW job:', error)
-        throw error
-      }
+      if (error) throw error
 
-      return new Response(JSON.stringify(atwJob), {
+      return new Response(JSON.stringify(job), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
