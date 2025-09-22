@@ -179,7 +179,7 @@ serve(async (req) => {
         })
       } else {
         // POST /desks - create new desk
-        const { code, name, territory, is_active = true } = body
+        const { code, name, is_active = true } = body
 
         if (!code || !name) {
           return new Response(
@@ -190,7 +190,7 @@ serve(async (req) => {
 
         const { data: desk, error } = await supabaseClient
           .from('desks')
-          .insert({ code, name, territory, is_active })
+          .insert({ code, name, is_active })
           .select()
           .single()
 
@@ -204,12 +204,11 @@ serve(async (req) => {
       // PATCH /desks/:id - update desk
       const deskId = parseInt(pathParts[2])
       const body = await req.json()
-      const { code, name, territory, is_active } = body
+      const { code, name, is_active } = body
 
       const updates: any = {}
       if (code !== undefined) updates.code = code
       if (name !== undefined) updates.name = name
-      if (territory !== undefined) updates.territory = territory
       if (is_active !== undefined) updates.is_active = is_active
 
       const { data: desk, error } = await supabaseClient

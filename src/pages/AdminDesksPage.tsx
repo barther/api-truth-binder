@@ -47,7 +47,6 @@ export default function AdminDesksPage() {
   const [deskForm, setDeskForm] = useState({
     code: "",
     name: "",
-    territory: "",
     is_active: true
   })
 
@@ -119,7 +118,7 @@ export default function AdminDesksPage() {
         setDesks(prev => [...prev, data])
         setSelectedDesk(data)
         setIsNewDeskDialogOpen(false)
-        setDeskForm({ code: "", name: "", territory: "", is_active: true })
+        setDeskForm({ code: "", name: "", is_active: true })
         toast({ title: "Success", description: "Desk created successfully" })
       }
     } catch (error: any) {
@@ -275,41 +274,33 @@ export default function AdminDesksPage() {
                 <DialogHeader>
                   <DialogTitle>CREATE NEW DESK</DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-4">
-                  <div>
-                    <Label htmlFor="code">CODE</Label>
-                    <Input
-                      id="code"
-                      value={deskForm.code}
-                      onChange={(e) => setDeskForm(prev => ({ ...prev, code: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="name">NAME</Label>
-                    <Input
-                      id="name"
-                      value={deskForm.name}
-                      onChange={(e) => setDeskForm(prev => ({ ...prev, name: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="territory">TERRITORY</Label>
-                    <Input
-                      id="territory"
-                      value={deskForm.territory}
-                      onChange={(e) => setDeskForm(prev => ({ ...prev, territory: e.target.value }))}
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Label htmlFor="active">ACTIVE</Label>
-                    <Switch
-                      id="active"
-                      checked={deskForm.is_active}
-                      onCheckedChange={(checked) => setDeskForm(prev => ({ ...prev, is_active: checked }))}
-                    />
-                  </div>
-                  <Button onClick={createDesk}>CREATE DESK</Button>
-                </div>
+                    <div className="grid gap-4">
+                      <div>
+                        <Label htmlFor="code">CODE</Label>
+                        <Input
+                          id="code"
+                          value={deskForm.code}
+                          onChange={(e) => setDeskForm(prev => ({ ...prev, code: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="name">NAME</Label>
+                        <Input
+                          id="name"
+                          value={deskForm.name}
+                          onChange={(e) => setDeskForm(prev => ({ ...prev, name: e.target.value }))}
+                        />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Label htmlFor="active">ACTIVE</Label>
+                        <Switch
+                          id="active"
+                          checked={deskForm.is_active}
+                          onCheckedChange={(checked) => setDeskForm(prev => ({ ...prev, is_active: checked }))}
+                        />
+                      </div>
+                      <Button onClick={createDesk}>CREATE DESK</Button>
+                    </div>
               </DialogContent>
             </Dialog>
           </div>
@@ -338,41 +329,33 @@ export default function AdminDesksPage() {
                     <DialogHeader>
                       <DialogTitle>CREATE NEW DESK</DialogTitle>
                     </DialogHeader>
-                    <div className="grid gap-4">
-                      <div>
-                        <Label htmlFor="code">CODE</Label>
-                        <Input
-                          id="code"
-                          value={deskForm.code}
-                          onChange={(e) => setDeskForm(prev => ({ ...prev, code: e.target.value }))}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="name">NAME</Label>
-                        <Input
-                          id="name"
-                          value={deskForm.name}
-                          onChange={(e) => setDeskForm(prev => ({ ...prev, name: e.target.value }))}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="territory">TERRITORY</Label>
-                        <Input
-                          id="territory"
-                          value={deskForm.territory}
-                          onChange={(e) => setDeskForm(prev => ({ ...prev, territory: e.target.value }))}
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Label htmlFor="active">ACTIVE</Label>
-                        <Switch
-                          id="active"
-                          checked={deskForm.is_active}
-                          onCheckedChange={(checked) => setDeskForm(prev => ({ ...prev, is_active: checked }))}
-                        />
-                      </div>
-                      <Button onClick={createDesk}>CREATE DESK</Button>
-                    </div>
+                <div className="grid gap-4">
+                  <div>
+                    <Label htmlFor="code">CODE</Label>
+                    <Input
+                      id="code"
+                      value={deskForm.code}
+                      onChange={(e) => setDeskForm(prev => ({ ...prev, code: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="name">NAME</Label>
+                    <Input
+                      id="name"
+                      value={deskForm.name}
+                      onChange={(e) => setDeskForm(prev => ({ ...prev, name: e.target.value }))}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="active">ACTIVE</Label>
+                    <Switch
+                      id="active"
+                      checked={deskForm.is_active}
+                      onCheckedChange={(checked) => setDeskForm(prev => ({ ...prev, is_active: checked }))}
+                    />
+                  </div>
+                  <Button onClick={createDesk}>CREATE DESK</Button>
+                </div>
                   </DialogContent>
                 </Dialog>
               </div>
@@ -392,9 +375,6 @@ export default function AdminDesksPage() {
                     <div>
                       <div className="font-medium">{desk.code}</div>
                       <div className="text-sm opacity-80">{desk.name}</div>
-                      {desk.territory && (
-                        <div className="text-xs opacity-60">{desk.territory}</div>
-                      )}
                     </div>
                     <Badge variant={desk.is_active ? "default" : "secondary"}>
                       {desk.is_active ? "Active" : "Inactive"}
@@ -438,14 +418,6 @@ export default function AdminDesksPage() {
                           id="edit-name"
                           value={deskForm.name || selectedDesk.name}
                           onChange={(e) => setDeskForm(prev => ({ ...prev, name: e.target.value }))}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="edit-territory">TERRITORY</Label>
-                        <Input
-                          id="edit-territory"
-                          value={deskForm.territory || selectedDesk.territory || ""}
-                          onChange={(e) => setDeskForm(prev => ({ ...prev, territory: e.target.value }))}
                         />
                       </div>
                       <div className="flex items-center space-x-2">
