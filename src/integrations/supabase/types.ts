@@ -128,34 +128,28 @@ export type Database = {
       }
       atw_jobs: {
         Row: {
-          created_at: string | null
-          description: string | null
-          desk_id: number | null
+          created_at: string
           id: number
-          is_active: boolean | null
-          required_rank: string | null
-          title: string
-          updated_at: string | null
+          is_active: boolean
+          label: string
+          policy: Json
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
-          description?: string | null
-          desk_id?: number | null
+          created_at?: string
           id?: number
-          is_active?: boolean | null
-          required_rank?: string | null
-          title: string
-          updated_at?: string | null
+          is_active?: boolean
+          label: string
+          policy: Json
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
-          description?: string | null
-          desk_id?: number | null
+          created_at?: string
           id?: number
-          is_active?: boolean | null
-          required_rank?: string | null
-          title?: string
-          updated_at?: string | null
+          is_active?: boolean
+          label?: string
+          policy?: Json
+          updated_at?: string
         }
         Relationships: []
       }

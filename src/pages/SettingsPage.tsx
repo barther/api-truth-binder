@@ -305,8 +305,8 @@ export function SettingsPage() {
                   <Badge variant="default" className="text-xs">Active</Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span>ATW Scheduling</span>
-                  <Badge variant="secondary" className="text-xs">Phase 2</Badge>
+                  <span>ATW Scheduling (Around The World)</span>
+                  <Badge variant="default" className="text-xs">Active</Badge>
                 </div>
               </div>
             </div>

@@ -10,6 +10,7 @@ import { VacanciesPage } from "./pages/VacanciesPage";
 import { HoldDownsPage } from "./pages/HoldDownsPage";
 import { AuditPage } from "./pages/AuditPage";
 import TricksPage from "./pages/TricksPage";
+import ATWPage from "./pages/ATWPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="vacancies" element={<VacanciesPage />} />
             <Route path="hold-downs" element={<HoldDownsPage />} />
             <Route path="audit" element={<AuditPage />} />
+            <Route path="atw" element={<ATWPage />} />
             <Route path="tricks" element={<TricksPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>

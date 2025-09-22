@@ -367,7 +367,7 @@ export function AssignmentDialog({
                         <SelectContent>
                           <SelectItem value="BASE">BASE</SelectItem>
                           <SelectItem value="HOLD_DOWN">HOLD DOWN</SelectItem>
-                          <SelectItem value="ATW">ATW</SelectItem>
+                          <SelectItem value="ATW">ATW (Around The World)</SelectItem>
                           <SelectItem value="OVERTIME">OVERTIME</SelectItem>
                         </SelectContent>
                       </Select>
