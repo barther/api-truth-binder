@@ -107,7 +107,7 @@ serve(async (req) => {
         })
       }
     } else if (req.method === 'POST') {
-      // Handle POST request for schedule with body parameters
+      // Handle different POST actions
       const body = await req.json()
       
       if (body.action === 'schedule') {
@@ -161,7 +161,69 @@ serve(async (req) => {
         return new Response(JSON.stringify(schedule), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
+      } else if (body.action === 'get_tricks') {
+        // GET tricks for a desk
+        const { desk_id } = body
+        
+        const { data: tricks, error } = await supabaseClient
+          .from('tricks')
+          .select('*')
+          .eq('desk_id', desk_id)
+          .eq('is_active', true)
+          .order('name')
+
+        if (error) throw error
+
+        return new Response(JSON.stringify(tricks), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      } else {
+        // POST /desks - create new desk
+        const { code, name, territory, is_active = true } = body
+
+        if (!code || !name) {
+          return new Response(
+            JSON.stringify({ error: 'code and name are required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+
+        const { data: desk, error } = await supabaseClient
+          .from('desks')
+          .insert({ code, name, territory, is_active })
+          .select()
+          .single()
+
+        if (error) throw error
+
+        return new Response(JSON.stringify(desk), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
       }
+    } else if (req.method === 'PATCH') {
+      // PATCH /desks/:id - update desk
+      const deskId = parseInt(pathParts[2])
+      const body = await req.json()
+      const { code, name, territory, is_active } = body
+
+      const updates: any = {}
+      if (code !== undefined) updates.code = code
+      if (name !== undefined) updates.name = name
+      if (territory !== undefined) updates.territory = territory
+      if (is_active !== undefined) updates.is_active = is_active
+
+      const { data: desk, error } = await supabaseClient
+        .from('desks')
+        .update(updates)
+        .eq('id', deskId)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return new Response(JSON.stringify(desk), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
     return new Response(

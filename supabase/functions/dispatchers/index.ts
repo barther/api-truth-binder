@@ -64,39 +64,18 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       } else {
-        // GET /dispatchers?q=search or POST with body
-        let query = url.searchParams.get('q') || ''
-        
-        // If it's a POST request, get query from body
-        if (req.method === 'POST' || (req.method === 'GET' && req.body)) {
-          try {
-            const body = await req.json()
-            query = body.q || query
-          } catch (e) {
-            // Ignore body parsing errors for GET requests
-          }
-        }
+        // GET /dispatchers?q=search
+        const query = url.searchParams.get('q') || ''
         
         let queryBuilder = supabaseClient
           .from('dispatchers')
           .select(`
             *,
-            qualifications (
-              id,
-              desk_id,
-              qualified_on,
-              desks (
-                id,
-                code,
-                name
-              )
-            ),
             seniority (
               rank,
               tie_breaker
             )
           `)
-          .eq('is_active', true)
           .order('last_name')
 
         // Apply search filter if provided
@@ -115,43 +94,50 @@ serve(async (req) => {
         })
       }
     } else if (req.method === 'POST') {
-      // Handle POST request for searching with body
-      const { q = '' } = await req.json()
-      
-      let queryBuilder = supabaseClient
-        .from('dispatchers')
-        .select(`
-          *,
-          qualifications (
-            id,
-            desk_id,
-            qualified_on,
-            desks (
-              id,
-              code,
-              name
-            )
-          ),
-          seniority (
-            rank,
-            tie_breaker
-          )
-        `)
-        .eq('is_active', true)
-        .order('last_name')
+      // POST /dispatchers - create new dispatcher
+      const body = await req.json()
+      const { first_name, last_name, badge, is_active = true } = body
 
-      // Apply search filter if provided
-      if (q.trim()) {
-        queryBuilder = queryBuilder.or(
-          `first_name.ilike.%${q}%,last_name.ilike.%${q}%,badge.ilike.%${q}%`
+      if (!first_name || !last_name || !badge) {
+        return new Response(
+          JSON.stringify({ error: 'first_name, last_name, and badge are required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
-      const { data: dispatchers, error } = await queryBuilder
+      const { data: dispatcher, error } = await supabaseClient
+        .from('dispatchers')
+        .insert({ first_name, last_name, badge, is_active })
+        .select()
+        .single()
 
       if (error) throw error
 
-      return new Response(JSON.stringify(dispatchers), {
+      return new Response(JSON.stringify(dispatcher), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    } else if (req.method === 'PATCH') {
+      // PATCH /dispatchers/:id - update dispatcher
+      const dispatcherId = parseInt(pathParts[2])
+      const body = await req.json()
+      const { first_name, last_name, badge, is_active } = body
+
+      const updates: any = {}
+      if (first_name !== undefined) updates.first_name = first_name
+      if (last_name !== undefined) updates.last_name = last_name
+      if (badge !== undefined) updates.badge = badge
+      if (is_active !== undefined) updates.is_active = is_active
+
+      const { data: dispatcher, error } = await supabaseClient
+        .from('dispatchers')
+        .update(updates)
+        .eq('id', dispatcherId)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return new Response(JSON.stringify(dispatcher), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }

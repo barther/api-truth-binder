@@ -1,4 +1,4 @@
-import { Calendar, Users, Clock, AlertTriangle, FileText, Settings, RotateCcw } from "lucide-react"
+import { Calendar, Users, Clock, AlertTriangle, FileText, Settings, RotateCcw, Wrench, UserCheck } from "lucide-react"
 import { NavLink } from "react-router-dom"
 import {
   Sidebar,
@@ -20,6 +20,8 @@ const navigationItems = [
   { title: "Vacancies", url: "/vacancies", icon: AlertTriangle },
   { title: "Hold-Downs", url: "/hold-downs", icon: Clock },
   { title: "ATW Jobs", url: "/atw", icon: RotateCcw },
+  { title: "Admin → Desks", url: "/admin/desks", icon: Wrench },
+  { title: "Admin → Dispatchers", url: "/admin/dispatchers", icon: UserCheck },
   { title: "Audit Log", url: "/audit", icon: FileText },
   { title: "Settings", url: "/settings", icon: Settings },
 ]
