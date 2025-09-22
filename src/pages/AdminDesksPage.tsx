@@ -4,11 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Edit } from "lucide-react"
+import { Plus } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
@@ -20,81 +18,57 @@ interface Division {
 }
 
 interface Desk {
-  desk_id: string
-  desk_code: string
-  desk_name: string
-  division_id: string
-  is_active: boolean
-  divisions?: Division
-}
-
-interface Shift {
-  shift_id: number
+  id: string
   code: string
-  starts_at: string
-  ends_at: string
-}
-
-interface Trick {
-  trick_id: string
-  desk_id: string
-  shift_id: number
-  title: string
-  desks?: { desk_code: string; desk_name: string }
-  shifts?: Shift
+  name: string
+  division: string
+  is_active: boolean
 }
 
 export default function AdminDesksPage() {
   const [desks, setDesks] = useState<Desk[]>([])
   const [divisions, setDivisions] = useState<Division[]>([])
-  const [shifts, setShifts] = useState<Shift[]>([])
   const [selectedDesk, setSelectedDesk] = useState<Desk | null>(null)
-  const [tricks, setTricks] = useState<Trick[]>([])
   const [loading, setLoading] = useState(true)
   const [isNewDeskDialogOpen, setIsNewDeskDialogOpen] = useState(false)
-  const [isNewTrickDialogOpen, setIsNewTrickDialogOpen] = useState(false)
-  const [editingTrick, setEditingTrick] = useState<Trick | null>(null)
   const { toast } = useToast()
 
   // Form states
   const [deskForm, setDeskForm] = useState({
-    desk_code: "",
-    desk_name: "",
-    division_id: "",
+    code: "",
+    name: "",
+    division: "",
     is_active: true
-  })
-
-  const [trickForm, setTrickForm] = useState({
-    title: "",
-    shift_id: "",
-    desk_id: ""
   })
 
   useEffect(() => {
     loadData()
   }, [])
 
-  useEffect(() => {
-    if (selectedDesk) {
-      loadTricks(selectedDesk.desk_id)
-    }
-  }, [selectedDesk])
-
   const loadData = async () => {
     try {
       setLoading(true)
       
-      // Load divisions
-      const { data: divisionsData } = await supabase.functions.invoke('divisions', { method: 'GET' })
-      if (divisionsData) setDivisions(divisionsData)
-
-      // Load shifts
-      const { data: shiftsData } = await supabase.functions.invoke('shifts', { method: 'GET' })
-      if (shiftsData) setShifts(shiftsData)
+      // Load divisions - use direct database query since we have new schema
+      const { data: divisionsData, error: divisionsError } = await supabase
+        .from('divisions')
+        .select('*')
       
-      // Load desks
-      const { data: desksData } = await supabase.functions.invoke('desks', { method: 'GET' })
-      if (desksData) {
+      if (divisionsError) {
+        console.error('Error loading divisions:', divisionsError)
+      } else if (divisionsData) {
+        setDivisions(divisionsData)
+      }
+      
+      // Load desks - use direct database query
+      const { data: desksData, error: desksError } = await supabase
+        .from('desks')
+        .select('*')
+        .order('code')
+      
+      if (desksError) {
+        console.error('Error loading desks:', desksError)
+      } else if (desksData) {
         setDesks(desksData)
         if (desksData.length > 0 && !selectedDesk) {
           setSelectedDesk(desksData[0])
@@ -112,41 +86,31 @@ export default function AdminDesksPage() {
     }
   }
 
-  const loadTricks = async (deskId: string) => {
-    try {
-      const { data } = await supabase.functions.invoke('desks', {
-        method: 'GET'
-      })
-      // Find tricks for this desk from the data
-      const { data: tricksData } = await supabase.functions.invoke('tricks', {
-        method: 'GET',
-        body: { desk_id: deskId }
-      })
-      if (tricksData) setTricks(tricksData)
-    } catch (error) {
-      console.error('Error loading tricks:', error)
-      toast({
-        title: "Error",
-        description: "Failed to load tricks",
-        variant: "destructive"
-      })
-    }
-  }
-
   const createDesk = async () => {
     try {
-      const { data } = await supabase.functions.invoke('desks', {
-        method: 'POST',
-        body: deskForm
-      })
+      console.log('Creating desk with form data:', deskForm)
+      
+      const { data, error } = await supabase
+        .from('desks')
+        .insert([deskForm])
+        .select()
+        .single()
+      
+      if (error) {
+        console.error('Supabase error creating desk:', error)
+        throw error
+      }
+      
       if (data) {
+        console.log('Desk created successfully:', data)
         setDesks(prev => [...prev, data])
         setSelectedDesk(data)
         setIsNewDeskDialogOpen(false)
-        setDeskForm({ desk_code: "", desk_name: "", division_id: "", is_active: true })
+        setDeskForm({ code: "", name: "", division: "", is_active: true })
         toast({ title: "Success", description: "Desk created successfully" })
       }
     } catch (error: any) {
+      console.error('Error in createDesk:', error)
       toast({
         title: "Error",
         description: error.message || "Failed to create desk",
@@ -158,12 +122,19 @@ export default function AdminDesksPage() {
   const updateDesk = async () => {
     if (!selectedDesk) return
     try {
-      const { data } = await supabase.functions.invoke('desks', {
-        method: 'PATCH',
-        body: { ...deskForm, desk_id: selectedDesk.desk_id }
-      })
+      const { data, error } = await supabase
+        .from('desks')
+        .update(deskForm)
+        .eq('id', selectedDesk.id)
+        .select()
+        .single()
+      
+      if (error) {
+        throw error
+      }
+      
       if (data) {
-        setDesks(prev => prev.map(d => d.desk_id === selectedDesk.desk_id ? data : d))
+        setDesks(prev => prev.map(d => d.id === selectedDesk.id ? data : d))
         setSelectedDesk(data)
         toast({ title: "Success", description: "Desk updated successfully" })
       }
@@ -176,58 +147,6 @@ export default function AdminDesksPage() {
     }
   }
 
-  const createTrick = async () => {
-    if (!selectedDesk) return
-    try {
-      const { data } = await supabase.functions.invoke('tricks', {
-        method: 'POST',
-        body: { ...trickForm, desk_id: selectedDesk.desk_id }
-      })
-      if (data) {
-        setTricks(prev => [...prev, data])
-        setIsNewTrickDialogOpen(false)
-        resetTrickForm()
-        toast({ title: "Success", description: "Trick created successfully" })
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create trick",
-        variant: "destructive"
-      })
-    }
-  }
-
-  const updateTrick = async () => {
-    if (!editingTrick) return
-    try {
-      const { data } = await supabase.functions.invoke('tricks', {
-        method: 'PATCH',
-        body: { ...trickForm, trick_id: editingTrick.trick_id }
-      })
-      if (data) {
-        setTricks(prev => prev.map(t => t.trick_id === editingTrick.trick_id ? data : t))
-        setEditingTrick(null)
-        resetTrickForm()
-        toast({ title: "Success", description: "Trick updated successfully" })
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update trick",
-        variant: "destructive"
-      })
-    }
-  }
-
-  const resetTrickForm = () => {
-    setTrickForm({
-      title: "",
-      shift_id: "",
-      desk_id: ""
-    })
-  }
-
   if (loading) {
     return <div className="p-6">Loading desks...</div>
   }
@@ -237,7 +156,7 @@ export default function AdminDesksPage() {
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <h2 className="text-2xl font-franklin font-semibold mb-4">NO DESKS CONFIGURED</h2>
+            <h2 className="text-2xl font-bold mb-4">NO DESKS CONFIGURED</h2>
             <p className="text-muted-foreground mb-6">Get started by creating your first desk</p>
             <Dialog open={isNewDeskDialogOpen} onOpenChange={setIsNewDeskDialogOpen}>
               <DialogTrigger asChild>
@@ -255,30 +174,33 @@ export default function AdminDesksPage() {
                     <Label htmlFor="desk-code">DESK CODE</Label>
                     <Input
                       id="desk-code"
-                      value={deskForm.desk_code}
-                      onChange={(e) => setDeskForm(prev => ({ ...prev, desk_code: e.target.value }))}
+                      value={deskForm.code}
+                      onChange={(e) => setDeskForm(prev => ({ ...prev, code: e.target.value }))}
+                      placeholder="e.g. BR2"
                     />
                   </div>
                   <div>
                     <Label htmlFor="desk-name">DESK NAME</Label>
                     <Input
                       id="desk-name"
-                      value={deskForm.desk_name}
-                      onChange={(e) => setDeskForm(prev => ({ ...prev, desk_name: e.target.value }))}
+                      value={deskForm.name}
+                      onChange={(e) => setDeskForm(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="e.g. Blue Ridge 2"
                     />
                   </div>
                   <div>
                     <Label htmlFor="division">DIVISION</Label>
-                    <Select value={deskForm.division_id} onValueChange={(value) => setDeskForm(prev => ({ ...prev, division_id: value }))}>
+                    <Select value={deskForm.division} onValueChange={(value) => setDeskForm(prev => ({ ...prev, division: value }))}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select division" />
                       </SelectTrigger>
                       <SelectContent>
-                        {divisions.map(division => (
-                          <SelectItem key={division.division_id} value={division.division_id}>
-                            {division.code} - {division.name}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="Coastal">Coastal</SelectItem>
+                        <SelectItem value="Gulf">Gulf</SelectItem>
+                        <SelectItem value="Blue Ridge">Blue Ridge</SelectItem>
+                        <SelectItem value="Midwest">Midwest</SelectItem>
+                        <SelectItem value="Great Lakes">Great Lakes</SelectItem>
+                        <SelectItem value="Keystone">Keystone</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -308,7 +230,7 @@ export default function AdminDesksPage() {
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-franklin">DESKS</CardTitle>
+                <CardTitle className="text-lg">DESKS</CardTitle>
                 <Dialog open={isNewDeskDialogOpen} onOpenChange={setIsNewDeskDialogOpen}>
                   <DialogTrigger asChild>
                     <Button size="sm" className="flex items-center gap-1">
@@ -325,30 +247,33 @@ export default function AdminDesksPage() {
                         <Label htmlFor="desk-code">DESK CODE</Label>
                         <Input
                           id="desk-code"
-                          value={deskForm.desk_code}
-                          onChange={(e) => setDeskForm(prev => ({ ...prev, desk_code: e.target.value }))}
+                          value={deskForm.code}
+                          onChange={(e) => setDeskForm(prev => ({ ...prev, code: e.target.value }))}
+                          placeholder="e.g. BR2"
                         />
                       </div>
                       <div>
                         <Label htmlFor="desk-name">DESK NAME</Label>
                         <Input
                           id="desk-name"
-                          value={deskForm.desk_name}
-                          onChange={(e) => setDeskForm(prev => ({ ...prev, desk_name: e.target.value }))}
+                          value={deskForm.name}
+                          onChange={(e) => setDeskForm(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="e.g. Blue Ridge 2"
                         />
                       </div>
                       <div>
                         <Label htmlFor="division">DIVISION</Label>
-                        <Select value={deskForm.division_id} onValueChange={(value) => setDeskForm(prev => ({ ...prev, division_id: value }))}>
+                        <Select value={deskForm.division} onValueChange={(value) => setDeskForm(prev => ({ ...prev, division: value }))}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select division" />
                           </SelectTrigger>
                           <SelectContent>
-                            {divisions.map(division => (
-                              <SelectItem key={division.division_id} value={division.division_id}>
-                                {division.code} - {division.name}
-                              </SelectItem>
-                            ))}
+                            <SelectItem value="Coastal">Coastal</SelectItem>
+                            <SelectItem value="Gulf">Gulf</SelectItem>
+                            <SelectItem value="Blue Ridge">Blue Ridge</SelectItem>
+                            <SelectItem value="Midwest">Midwest</SelectItem>
+                            <SelectItem value="Great Lakes">Great Lakes</SelectItem>
+                            <SelectItem value="Keystone">Keystone</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -369,19 +294,19 @@ export default function AdminDesksPage() {
             <CardContent className="space-y-2">
               {desks.map(desk => (
                 <div
-                  key={desk.desk_id}
+                  key={desk.id}
                   className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                    selectedDesk?.desk_id === desk.desk_id
+                    selectedDesk?.id === desk.id
                       ? 'bg-primary text-primary-foreground'
-                      : 'bg-surface-light hover:bg-surface'
+                      : 'bg-muted hover:bg-muted/80'
                   }`}
                   onClick={() => setSelectedDesk(desk)}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-medium">{desk.desk_code}</div>
-                      <div className="text-sm opacity-80">{desk.desk_name}</div>
-                      <div className="text-xs opacity-60">{desk.divisions?.name}</div>
+                      <div className="font-medium">{desk.code}</div>
+                      <div className="text-sm opacity-80">{desk.name}</div>
+                      <div className="text-xs opacity-60">{desk.division}</div>
                     </div>
                     <Badge variant={desk.is_active ? "default" : "secondary"}>
                       {desk.is_active ? "Active" : "Inactive"}
@@ -398,183 +323,57 @@ export default function AdminDesksPage() {
           {selectedDesk && (
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-franklin">
-                  {selectedDesk.desk_code} - {selectedDesk.desk_name}
+                <CardTitle className="text-lg">
+                  {selectedDesk.code} - {selectedDesk.name}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="details">
-                  <TabsList>
-                    <TabsTrigger value="details">DETAILS</TabsTrigger>
-                    <TabsTrigger value="tricks">TRICKS</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="details" className="mt-4">
-                    <div className="grid gap-4">
-                      <div>
-                        <Label htmlFor="edit-desk-code">DESK CODE</Label>
-                        <Input
-                          id="edit-desk-code"
-                          value={deskForm.desk_code || selectedDesk.desk_code}
-                          onChange={(e) => setDeskForm(prev => ({ ...prev, desk_code: e.target.value }))}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="edit-desk-name">DESK NAME</Label>
-                        <Input
-                          id="edit-desk-name"
-                          value={deskForm.desk_name || selectedDesk.desk_name}
-                          onChange={(e) => setDeskForm(prev => ({ ...prev, desk_name: e.target.value }))}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="edit-division">DIVISION</Label>
-                        <Select 
-                          value={deskForm.division_id || selectedDesk.division_id} 
-                          onValueChange={(value) => setDeskForm(prev => ({ ...prev, division_id: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {divisions.map(division => (
-                              <SelectItem key={division.division_id} value={division.division_id}>
-                                {division.code} - {division.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Label htmlFor="edit-active">ACTIVE</Label>
-                        <Switch
-                          id="edit-active"
-                          checked={deskForm.is_active ?? selectedDesk.is_active}
-                          onCheckedChange={(checked) => setDeskForm(prev => ({ ...prev, is_active: checked }))}
-                        />
-                      </div>
-                      <Button onClick={updateDesk}>SAVE CHANGES</Button>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="tricks" className="mt-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-medium">TRICKS</h3>
-                        <Dialog open={isNewTrickDialogOpen} onOpenChange={setIsNewTrickDialogOpen}>
-                          <DialogTrigger asChild>
-                            <Button size="sm" className="flex items-center gap-1">
-                              <Plus className="h-3 w-3" />
-                              ADD TRICK
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-md">
-                            <DialogHeader>
-                              <DialogTitle>CREATE NEW TRICK</DialogTitle>
-                            </DialogHeader>
-                            <div className="grid gap-4">
-                              <div>
-                                <Label htmlFor="trick-title">TITLE</Label>
-                                <Input
-                                  id="trick-title"
-                                  value={trickForm.title}
-                                  onChange={(e) => setTrickForm(prev => ({ ...prev, title: e.target.value }))}
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="shift">SHIFT</Label>
-                                <Select value={trickForm.shift_id} onValueChange={(value) => setTrickForm(prev => ({ ...prev, shift_id: value }))}>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select shift" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {shifts.map(shift => (
-                                      <SelectItem key={shift.shift_id} value={shift.shift_id.toString()}>
-                                        {shift.code} ({shift.starts_at} - {shift.ends_at})
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <Button onClick={createTrick}>CREATE TRICK</Button>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>TITLE</TableHead>
-                            <TableHead>SHIFT</TableHead>
-                            <TableHead>TIMES</TableHead>
-                            <TableHead>ACTIONS</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {tricks.map(trick => (
-                            <TableRow key={trick.trick_id}>
-                              <TableCell className="font-medium">{trick.title}</TableCell>
-                              <TableCell>{trick.shifts?.code}</TableCell>
-                              <TableCell>{trick.shifts?.starts_at} - {trick.shifts?.ends_at}</TableCell>
-                              <TableCell>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setEditingTrick(trick)
-                                    setTrickForm({
-                                      title: trick.title,
-                                      shift_id: trick.shift_id.toString(),
-                                      desk_id: trick.desk_id
-                                    })
-                                  }}
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-
-                      {/* Edit Trick Dialog */}
-                      <Dialog open={!!editingTrick} onOpenChange={() => setEditingTrick(null)}>
-                        <DialogContent className="max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>EDIT TRICK</DialogTitle>
-                          </DialogHeader>
-                          <div className="grid gap-4">
-                            <div>
-                              <Label htmlFor="edit-trick-title">TITLE</Label>
-                              <Input
-                                id="edit-trick-title"
-                                value={trickForm.title}
-                                onChange={(e) => setTrickForm(prev => ({ ...prev, title: e.target.value }))}
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="edit-shift">SHIFT</Label>
-                              <Select value={trickForm.shift_id} onValueChange={(value) => setTrickForm(prev => ({ ...prev, shift_id: value }))}>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {shifts.map(shift => (
-                                    <SelectItem key={shift.shift_id} value={shift.shift_id.toString()}>
-                                      {shift.code} ({shift.starts_at} - {shift.ends_at})
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <Button onClick={updateTrick}>UPDATE TRICK</Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                <div className="grid gap-4">
+                  <div>
+                    <Label htmlFor="edit-desk-code">DESK CODE</Label>
+                    <Input
+                      id="edit-desk-code"
+                      value={deskForm.code || selectedDesk.code}
+                      onChange={(e) => setDeskForm(prev => ({ ...prev, code: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-desk-name">DESK NAME</Label>
+                    <Input
+                      id="edit-desk-name"
+                      value={deskForm.name || selectedDesk.name}
+                      onChange={(e) => setDeskForm(prev => ({ ...prev, name: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-division">DIVISION</Label>
+                    <Select 
+                      value={deskForm.division || selectedDesk.division} 
+                      onValueChange={(value) => setDeskForm(prev => ({ ...prev, division: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Coastal">Coastal</SelectItem>
+                        <SelectItem value="Gulf">Gulf</SelectItem>
+                        <SelectItem value="Blue Ridge">Blue Ridge</SelectItem>
+                        <SelectItem value="Midwest">Midwest</SelectItem>
+                        <SelectItem value="Great Lakes">Great Lakes</SelectItem>
+                        <SelectItem value="Keystone">Keystone</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="edit-active">ACTIVE</Label>
+                    <Switch
+                      id="edit-active"
+                      checked={deskForm.is_active ?? selectedDesk.is_active}
+                      onCheckedChange={(checked) => setDeskForm(prev => ({ ...prev, is_active: checked }))}
+                    />
+                  </div>
+                  <Button onClick={updateDesk}>SAVE CHANGES</Button>
+                </div>
               </CardContent>
             </Card>
           )}
