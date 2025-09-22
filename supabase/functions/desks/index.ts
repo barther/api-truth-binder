@@ -19,86 +19,44 @@ serve(async (req) => {
 
     const url = new URL(req.url)
     const pathParts = url.pathname.split('/')
-    
-    // Handle different endpoints
+    console.log('Desks function called with path:', url.pathname, 'method:', req.method)
+
     if (req.method === 'GET') {
       if (pathParts[3] === 'tricks' && pathParts[2]) {
         // GET /desks/:id/tricks
-        const deskId = parseInt(pathParts[2])
+        const deskId = pathParts[2]
         
         const { data: tricks, error } = await supabaseClient
           .from('tricks')
-          .select('*')
+          .select(`
+            *,
+            shifts (
+              code,
+              starts_at,
+              ends_at
+            )
+          `)
           .eq('desk_id', deskId)
-          .eq('is_active', true)
-          .order('name')
+          .order('title')
 
         if (error) throw error
 
         return new Response(JSON.stringify(tricks), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
-      } else if (pathParts[3] === 'schedule' && pathParts[2]) {
-        // GET /desks/:id/schedule?start=YYYY-MM-DD&end=YYYY-MM-DD
-        const deskId = parseInt(pathParts[2])
-        const start = url.searchParams.get('start')
-        const end = url.searchParams.get('end')
-
-        if (!start || !end) {
-          return new Response(
-            JSON.stringify({ error: 'start and end query parameters are required' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-
-        // Get trick instances with assignments for the desk and date range
-        const { data: schedule, error } = await supabaseClient
-          .from('trick_instances')
-          .select(`
-            *,
-            tricks!inner (
-              id,
-              desk_id,
-              name,
-              shift_start,
-              shift_end,
-              timezone
-            ),
-            assignments (
-              id,
-              dispatcher_id,
-              source,
-              requires_trainer,
-              trainer_id,
-              created_at,
-              deleted_at,
-              dispatchers (
-                id,
-                badge,
-                first_name,
-                last_name,
-                rank
-              )
-            )
-          `)
-          .eq('tricks.desk_id', deskId)
-          .gte('starts_at', start + 'T00:00:00Z')
-          .lte('starts_at', end + 'T23:59:59Z')
-          .is('assignments.deleted_at', null)
-          .order('starts_at')
-
-        if (error) throw error
-
-        return new Response(JSON.stringify(schedule), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
       } else {
         // GET /desks
         const { data: desks, error } = await supabaseClient
           .from('desks')
-          .select('*')
+          .select(`
+            *,
+            divisions (
+              code,
+              name
+            )
+          `)
           .eq('is_active', true)
-          .order('code')
+          .order('desk_code')
 
         if (error) throw error
 
@@ -107,115 +65,57 @@ serve(async (req) => {
         })
       }
     } else if (req.method === 'POST') {
-      // Handle different POST actions
+      // POST /desks - create new desk
       const body = await req.json()
-      
-      if (body.action === 'schedule') {
-        const { deskId, start, end } = body
+      const { desk_code, desk_name, division_id, is_active = true } = body
 
-        if (!deskId || !start || !end) {
-          return new Response(
-            JSON.stringify({ error: 'deskId, start and end are required' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-
-        // Get trick instances with assignments for the desk and date range
-        const { data: schedule, error } = await supabaseClient
-          .from('trick_instances')
-          .select(`
-            *,
-            tricks!inner (
-              id,
-              desk_id,
-              name,
-              shift_start,
-              shift_end,
-              timezone
-            ),
-            assignments (
-              id,
-              dispatcher_id,
-              source,
-              requires_trainer,
-              trainer_id,
-              created_at,
-              deleted_at,
-              dispatchers (
-                id,
-                badge,
-                first_name,
-                last_name,
-                rank
-              )
-            )
-          `)
-          .eq('tricks.desk_id', deskId)
-          .gte('starts_at', start + 'T00:00:00Z')
-          .lte('starts_at', end + 'T23:59:59Z')
-          .is('assignments.deleted_at', null)
-          .order('starts_at')
-
-        if (error) throw error
-
-        return new Response(JSON.stringify(schedule), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      } else if (body.action === 'get_tricks') {
-        // GET tricks for a desk
-        const { desk_id } = body
-        
-        const { data: tricks, error } = await supabaseClient
-          .from('tricks')
-          .select('*')
-          .eq('desk_id', desk_id)
-          .eq('is_active', true)
-          .order('name')
-
-        if (error) throw error
-
-        return new Response(JSON.stringify(tricks), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      } else {
-        // POST /desks - create new desk
-        const { code, name, is_active = true } = body
-
-        if (!code || !name) {
-          return new Response(
-            JSON.stringify({ error: 'code and name are required' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
-
-        const { data: desk, error } = await supabaseClient
-          .from('desks')
-          .insert({ code, name, is_active })
-          .select()
-          .single()
-
-        if (error) throw error
-
-        return new Response(JSON.stringify(desk), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+      if (!desk_code || !desk_name || !division_id) {
+        return new Response(
+          JSON.stringify({ error: 'desk_code, desk_name, and division_id are required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
       }
+
+      const { data: desk, error } = await supabaseClient
+        .from('desks')
+        .insert({ desk_code, desk_name, division_id, is_active })
+        .select(`
+          *,
+          divisions (
+            code,
+            name
+          )
+        `)
+        .single()
+
+      if (error) throw error
+
+      return new Response(JSON.stringify(desk), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     } else if (req.method === 'PATCH') {
       // PATCH /desks/:id - update desk
-      const deskId = parseInt(pathParts[2])
+      const deskId = pathParts[2]
       const body = await req.json()
-      const { code, name, is_active } = body
+      const { desk_code, desk_name, division_id, is_active } = body
 
       const updates: any = {}
-      if (code !== undefined) updates.code = code
-      if (name !== undefined) updates.name = name
+      if (desk_code !== undefined) updates.desk_code = desk_code
+      if (desk_name !== undefined) updates.desk_name = desk_name
+      if (division_id !== undefined) updates.division_id = division_id
       if (is_active !== undefined) updates.is_active = is_active
 
       const { data: desk, error } = await supabaseClient
         .from('desks')
         .update(updates)
-        .eq('id', deskId)
-        .select()
+        .eq('desk_id', deskId)
+        .select(`
+          *,
+          divisions (
+            code,
+            name
+          )
+        `)
         .single()
 
       if (error) throw error

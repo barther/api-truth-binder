@@ -97,16 +97,27 @@ export function HoldDownsPage() {
     }
   }
 
-  const fetchTricksForDesk = async (deskId: number) => {
+  const fetchTricksForDesk = async (deskId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('tricks')
-        .select('*')
-        .eq('desk_id', deskId)
-        .eq('is_active', true)
-
-      if (error) throw error
-      setTricks(data || [])
+      const { data } = await supabase.functions.invoke('tricks', {
+        method: 'GET',
+        body: { desk_id: deskId }
+      })
+      
+      if (data) {
+        // Convert new schema tricks to old format for compatibility
+        const compatibleTricks = data.map((trick: any) => ({
+          id: trick.trick_id,
+          name: trick.title,
+          desk_id: parseInt(trick.desk_id),
+          shift_start: trick.shifts?.starts_at || "00:00",
+          shift_end: trick.shifts?.ends_at || "00:00",
+          days_mask: "1111100", // Default Mon-Fri
+          timezone: "America/New_York",
+          is_active: true
+        }))
+        setTricks(compatibleTricks)
+      }
     } catch (error) {
       console.error('Error fetching tricks:', error)
     }
@@ -115,7 +126,7 @@ export function HoldDownsPage() {
   const handleDeskChange = (deskId: string) => {
     setFormData({ ...formData, desk_id: deskId, trick_id: '' })
     if (deskId) {
-      fetchTricksForDesk(parseInt(deskId))
+      fetchTricksForDesk(deskId)
     } else {
       setTricks([])
     }

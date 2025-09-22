@@ -12,42 +12,33 @@ serve(async (req) => {
   }
 
   try {
-  const supabaseClient = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-  )
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
     const url = new URL(req.url)
     const pathParts = url.pathname.split('/')
+    console.log('Dispatchers function called with path:', url.pathname, 'method:', req.method)
 
     if (req.method === 'GET') {
       if (pathParts[2] && pathParts[2] !== '') {
         // GET /dispatchers/:id
-        const dispatcherId = parseInt(pathParts[2])
+        const dispatcherId = pathParts[2]
         
         const { data: dispatcher, error } = await supabaseClient
           .from('dispatchers')
           .select(`
             *,
-            qualifications (
-              id,
-              desk_id,
-              qualified_on,
-              trainer_id,
-              notes,
-              desks (
-                id,
+            dispatcher_current_division!inner (
+              division_id,
+              divisions (
                 code,
                 name
               )
-            ),
-            seniority (
-              rank,
-              tie_breaker
             )
           `)
-          .eq('id', dispatcherId)
-          .eq('is_active', true)
+          .eq('dispatcher_id', dispatcherId)
           .single()
 
         if (error) {
@@ -64,16 +55,20 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       } else {
-        // GET /dispatchers?q=search
+        // GET /dispatchers?q=search&division=GLF
         const query = url.searchParams.get('q') || ''
+        const division = url.searchParams.get('division')
         
         let queryBuilder = supabaseClient
           .from('dispatchers')
           .select(`
             *,
-            seniority (
-              rank,
-              tie_breaker
+            dispatcher_current_division (
+              division_id,
+              divisions (
+                code,
+                name
+              )
             )
           `)
           .order('last_name')
@@ -81,7 +76,7 @@ serve(async (req) => {
         // Apply search filter if provided
         if (query.trim()) {
           queryBuilder = queryBuilder.or(
-            `first_name.ilike.%${query}%,last_name.ilike.%${query}%,badge.ilike.%${query}%`
+            `first_name.ilike.%${query}%,last_name.ilike.%${query}%,emp_id.ilike.%${query}%`
           )
         }
 
@@ -89,25 +84,33 @@ serve(async (req) => {
 
         if (error) throw error
 
-        return new Response(JSON.stringify(dispatchers), {
+        // Filter by division client-side if needed
+        let filteredDispatchers = dispatchers
+        if (division) {
+          filteredDispatchers = dispatchers.filter(d => 
+            d.dispatcher_current_division?.divisions?.code === division
+          )
+        }
+
+        return new Response(JSON.stringify(filteredDispatchers), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
     } else if (req.method === 'POST') {
       // POST /dispatchers - create new dispatcher
       const body = await req.json()
-      const { first_name, last_name, badge, is_active = true } = body
+      const { emp_id, first_name, last_name, seniority_date, status = 'active' } = body
 
-      if (!first_name || !last_name || !badge) {
+      if (!emp_id || !first_name || !last_name || !seniority_date) {
         return new Response(
-          JSON.stringify({ error: 'first_name, last_name, and badge are required' }),
+          JSON.stringify({ error: 'emp_id, first_name, last_name, and seniority_date are required' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
       const { data: dispatcher, error } = await supabaseClient
         .from('dispatchers')
-        .insert({ first_name, last_name, badge, is_active })
+        .insert({ emp_id, first_name, last_name, seniority_date, status })
         .select()
         .single()
 
@@ -118,20 +121,21 @@ serve(async (req) => {
       })
     } else if (req.method === 'PATCH') {
       // PATCH /dispatchers/:id - update dispatcher
-      const dispatcherId = parseInt(pathParts[2])
+      const dispatcherId = pathParts[2]
       const body = await req.json()
-      const { first_name, last_name, badge, is_active } = body
+      const { emp_id, first_name, last_name, seniority_date, status } = body
 
       const updates: any = {}
+      if (emp_id !== undefined) updates.emp_id = emp_id
       if (first_name !== undefined) updates.first_name = first_name
       if (last_name !== undefined) updates.last_name = last_name
-      if (badge !== undefined) updates.badge = badge
-      if (is_active !== undefined) updates.is_active = is_active
+      if (seniority_date !== undefined) updates.seniority_date = seniority_date
+      if (status !== undefined) updates.status = status
 
       const { data: dispatcher, error } = await supabaseClient
         .from('dispatchers')
         .update(updates)
-        .eq('id', dispatcherId)
+        .eq('dispatcher_id', dispatcherId)
         .select()
         .single()
 

@@ -3,103 +3,75 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Edit, Search, Trash2 } from "lucide-react"
+import { Plus, Edit, Search } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 
-interface Dispatcher {
-  id: number
-  first_name: string
-  last_name: string
-  badge: string
-  rank: string | null
-  is_active: boolean
-}
-
-interface Seniority {
-  dispatcher_id: number
-  rank: string
-  tie_breaker: number
-}
-
-interface Qualification {
-  id: number
-  dispatcher_id: number
-  desk_id: number
-  qualified_on: string
-  trainer_id: number | null
-  notes: string | null
-  is_active: boolean
-  desks?: { code: string; name: string }
-  trainers?: { first_name: string; last_name: string }
-}
-
-interface Desk {
-  id: number
+interface Division {
+  division_id: string
   code: string
   name: string
 }
 
+interface Dispatcher {
+  dispatcher_id: string
+  emp_id: string
+  first_name: string
+  last_name: string
+  seniority_date: string
+  status: 'active' | 'inactive' | 'retired' | 'terminated'
+  dispatcher_current_division?: {
+    division_id: string
+    divisions?: Division
+  }
+}
+
 export default function AdminDispatchersPage() {
   const [dispatchers, setDispatchers] = useState<Dispatcher[]>([])
-  const [desks, setDesks] = useState<Desk[]>([])
-  const [qualifications, setQualifications] = useState<Qualification[]>([])
+  const [divisions, setDivisions] = useState<Division[]>([])
   const [searchQuery, setSearchQuery] = useState("")
+  const [selectedDivision, setSelectedDivision] = useState("")
   const [loading, setLoading] = useState(true)
   const [isNewDispatcherDialogOpen, setIsNewDispatcherDialogOpen] = useState(false)
   const [editingDispatcher, setEditingDispatcher] = useState<Dispatcher | null>(null)
-  const [selectedDispatcherQuals, setSelectedDispatcherQuals] = useState<Qualification[]>([])
   const { toast } = useToast()
 
   // Form states
   const [dispatcherForm, setDispatcherForm] = useState({
+    emp_id: "",
     first_name: "",
     last_name: "",
-    badge: "",
-    rank: "",
-    tie_breaker: 0,
-    is_active: true
-  })
-
-  const [qualificationForm, setQualificationForm] = useState({
-    desk_id: "",
-    qualified_on: "",
-    trainer_id: "",
-    notes: ""
+    seniority_date: "",
+    status: "active" as 'active' | 'inactive' | 'retired' | 'terminated'
   })
 
   useEffect(() => {
     loadData()
   }, [])
 
-  useEffect(() => {
-    if (editingDispatcher) {
-      loadQualifications(editingDispatcher.id)
-    }
-  }, [editingDispatcher])
-
   const loadData = async () => {
     try {
       setLoading(true)
       
+      // Load divisions
+      const { data: divisionsData } = await supabase.functions.invoke('divisions', { method: 'GET' })
+      if (divisionsData) setDivisions(divisionsData)
+      
       // Load dispatchers
       const { data: dispatchersData } = await supabase.functions.invoke('dispatchers', {
         method: 'GET',
-        body: { q: searchQuery }
+        body: { 
+          q: searchQuery,
+          division: selectedDivision 
+        }
       })
       if (dispatchersData) setDispatchers(dispatchersData)
-
-      // Load desks
-      const { data: desksData } = await supabase.functions.invoke('desks', { method: 'GET' })
-      if (desksData) setDesks(desksData)
 
     } catch (error) {
       console.error('Error loading data:', error)
@@ -113,43 +85,15 @@ export default function AdminDispatchersPage() {
     }
   }
 
-  const loadQualifications = async (dispatcherId: number) => {
-    try {
-      const { data } = await supabase.functions.invoke('qualifications', {
-        method: 'GET',
-        body: { dispatcher_id: dispatcherId }
-      })
-      if (data) setSelectedDispatcherQuals(data)
-    } catch (error) {
-      console.error('Error loading qualifications:', error)
-    }
-  }
-
   const createDispatcher = async () => {
     try {
-      // First create dispatcher
       const { data: dispatcher } = await supabase.functions.invoke('dispatchers', {
         method: 'POST',
-        body: {
-          first_name: dispatcherForm.first_name,
-          last_name: dispatcherForm.last_name,
-          badge: dispatcherForm.badge,
-          is_active: dispatcherForm.is_active
-        }
+        body: dispatcherForm
       })
 
       if (dispatcher) {
-        // Then create seniority record
-        await supabase.functions.invoke('seniority', {
-          method: 'PUT',
-          body: {
-            dispatcher_id: dispatcher.id,
-            rank: dispatcherForm.rank,
-            tie_breaker: dispatcherForm.tie_breaker
-          }
-        })
-
-        setDispatchers(prev => [...prev, { ...dispatcher, rank: dispatcherForm.rank }])
+        setDispatchers(prev => [...prev, dispatcher])
         setIsNewDispatcherDialogOpen(false)
         resetDispatcherForm()
         toast({ title: "Success", description: "Dispatcher created successfully" })
@@ -169,29 +113,14 @@ export default function AdminDispatchersPage() {
       const { data } = await supabase.functions.invoke('dispatchers', {
         method: 'PATCH',
         body: {
-          id: editingDispatcher.id,
-          first_name: dispatcherForm.first_name,
-          last_name: dispatcherForm.last_name,
-          badge: dispatcherForm.badge,
-          is_active: dispatcherForm.is_active
+          dispatcher_id: editingDispatcher.dispatcher_id,
+          ...dispatcherForm
         }
       })
 
       if (data) {
-        // Update seniority
-        await supabase.functions.invoke('seniority', {
-          method: 'PUT',
-          body: {
-            dispatcher_id: editingDispatcher.id,
-            rank: dispatcherForm.rank,
-            tie_breaker: dispatcherForm.tie_breaker
-          }
-        })
-
         setDispatchers(prev => prev.map(d => 
-          d.id === editingDispatcher.id 
-            ? { ...data, rank: dispatcherForm.rank }
-            : d
+          d.dispatcher_id === editingDispatcher.dispatcher_id ? { ...d, ...data } : d
         ))
         toast({ title: "Success", description: "Dispatcher updated successfully" })
       }
@@ -204,79 +133,24 @@ export default function AdminDispatchersPage() {
     }
   }
 
-  const addQualification = async () => {
-    if (!editingDispatcher) return
-    try {
-      const { data } = await supabase.functions.invoke('qualifications', {
-        method: 'POST',
-        body: {
-          dispatcher_id: editingDispatcher.id,
-          desk_id: parseInt(qualificationForm.desk_id),
-          qualified_on: qualificationForm.qualified_on,
-          trainer_id: qualificationForm.trainer_id ? parseInt(qualificationForm.trainer_id) : null,
-          notes: qualificationForm.notes || null
-        }
-      })
-
-      if (data) {
-        loadQualifications(editingDispatcher.id)
-        setQualificationForm({ desk_id: "", qualified_on: "", trainer_id: "", notes: "" })
-        toast({ title: "Success", description: "Qualification added successfully" })
-      }
-    } catch (error: any) {
-      if (error.message?.includes('422') || error.message?.includes('duplicate')) {
-        toast({
-          title: "Validation Error",
-          description: "Dispatcher already qualified for this desk",
-          variant: "destructive"
-        })
-      } else {
-        toast({
-          title: "Error",
-          description: error.message || "Failed to add qualification",
-          variant: "destructive"
-        })
-      }
-    }
-  }
-
-  const removeQualification = async (qualId: number) => {
-    try {
-      await supabase.functions.invoke('qualifications', {
-        method: 'DELETE',
-        body: { id: qualId }
-      })
-      
-      if (editingDispatcher) {
-        loadQualifications(editingDispatcher.id)
-      }
-      toast({ title: "Success", description: "Qualification removed successfully" })
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to remove qualification",
-        variant: "destructive"
-      })
-    }
-  }
-
   const toggleDispatcherStatus = async (dispatcher: Dispatcher) => {
     try {
+      const newStatus = dispatcher.status === 'active' ? 'inactive' : 'active'
       const { data } = await supabase.functions.invoke('dispatchers', {
         method: 'PATCH',
         body: {
-          id: dispatcher.id,
-          is_active: !dispatcher.is_active
+          dispatcher_id: dispatcher.dispatcher_id,
+          status: newStatus
         }
       })
 
       if (data) {
         setDispatchers(prev => prev.map(d => 
-          d.id === dispatcher.id ? { ...d, is_active: data.is_active } : d
+          d.dispatcher_id === dispatcher.dispatcher_id ? { ...d, status: newStatus } : d
         ))
         toast({ 
           title: "Success", 
-          description: `Dispatcher ${data.is_active ? 'activated' : 'deactivated'}` 
+          description: `Dispatcher ${newStatus === 'active' ? 'activated' : 'deactivated'}` 
         })
       }
     } catch (error: any) {
@@ -290,20 +164,36 @@ export default function AdminDispatchersPage() {
 
   const resetDispatcherForm = () => {
     setDispatcherForm({
+      emp_id: "",
       first_name: "",
       last_name: "",
-      badge: "",
-      rank: "",
-      tie_breaker: 0,
-      is_active: true
+      seniority_date: "",
+      status: "active" as 'active' | 'inactive' | 'retired' | 'terminated'
     })
   }
 
-  const filteredDispatchers = dispatchers.filter(dispatcher =>
-    dispatcher.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    dispatcher.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    dispatcher.badge.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  // Filter dispatchers based on search and division
+  const filteredDispatchers = dispatchers.filter(dispatcher => {
+    const matchesSearch = !searchQuery || 
+      dispatcher.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      dispatcher.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      dispatcher.emp_id.toLowerCase().includes(searchQuery.toLowerCase())
+    
+    const matchesDivision = !selectedDivision || 
+      dispatcher.dispatcher_current_division?.divisions?.code === selectedDivision
+
+    return matchesSearch && matchesDivision
+  })
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'default'
+      case 'inactive': return 'secondary'
+      case 'retired': return 'outline'
+      case 'terminated': return 'destructive'
+      default: return 'secondary'
+    }
+  }
 
   if (loading) {
     return <div className="p-6">Loading dispatchers...</div>
@@ -345,39 +235,35 @@ export default function AdminDispatchersPage() {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="badge">EMPLOYEE ID</Label>
+                  <Label htmlFor="emp-id">EMPLOYEE ID</Label>
                   <Input
-                    id="badge"
-                    value={dispatcherForm.badge}
-                    onChange={(e) => setDispatcherForm(prev => ({ ...prev, badge: e.target.value }))}
+                    id="emp-id"
+                    value={dispatcherForm.emp_id}
+                    onChange={(e) => setDispatcherForm(prev => ({ ...prev, emp_id: e.target.value }))}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label htmlFor="rank">RANK</Label>
-                    <Input
-                      id="rank"
-                      value={dispatcherForm.rank}
-                      onChange={(e) => setDispatcherForm(prev => ({ ...prev, rank: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="tie-breaker">TIE BREAKER</Label>
-                    <Input
-                      id="tie-breaker"
-                      type="number"
-                      value={dispatcherForm.tie_breaker}
-                      onChange={(e) => setDispatcherForm(prev => ({ ...prev, tie_breaker: parseInt(e.target.value) || 0 }))}
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="active">ACTIVE</Label>
-                  <Switch
-                    id="active"
-                    checked={dispatcherForm.is_active}
-                    onCheckedChange={(checked) => setDispatcherForm(prev => ({ ...prev, is_active: checked }))}
+                <div>
+                  <Label htmlFor="seniority-date">SENIORITY DATE</Label>
+                  <Input
+                    id="seniority-date"
+                    type="date"
+                    value={dispatcherForm.seniority_date}
+                    onChange={(e) => setDispatcherForm(prev => ({ ...prev, seniority_date: e.target.value }))}
                   />
+                </div>
+                <div>
+                  <Label htmlFor="status">STATUS</Label>
+                  <Select value={dispatcherForm.status} onValueChange={(value: any) => setDispatcherForm(prev => ({ ...prev, status: value }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="retired">Retired</SelectItem>
+                      <SelectItem value="terminated">Terminated</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button onClick={createDispatcher}>CREATE DISPATCHER</Button>
               </div>
@@ -385,8 +271,8 @@ export default function AdminDispatchersPage() {
           </Dialog>
         </div>
 
-        {/* Search Bar */}
-        <div className="flex items-center gap-2">
+        {/* Filters */}
+        <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -396,6 +282,24 @@ export default function AdminDispatchersPage() {
               className="pl-8"
             />
           </div>
+          <div className="w-48">
+            <Select value={selectedDivision} onValueChange={setSelectedDivision}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Divisions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Divisions</SelectItem>
+                {divisions.map(division => (
+                  <SelectItem key={division.division_id} value={division.code}>
+                    {division.code} - {division.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button variant="outline" onClick={loadData}>
+            REFRESH
+          </Button>
         </div>
 
         {/* Dispatchers Table */}
@@ -411,26 +315,39 @@ export default function AdminDispatchersPage() {
                   <TableHead>FIRST NAME</TableHead>
                   <TableHead>EMPLOYEE ID</TableHead>
                   <TableHead>SENIORITY</TableHead>
+                  <TableHead>DIVISION</TableHead>
                   <TableHead>STATUS</TableHead>
                   <TableHead>ACTIONS</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredDispatchers.map(dispatcher => (
-                  <TableRow key={dispatcher.id}>
+                  <TableRow key={dispatcher.dispatcher_id}>
                     <TableCell className="font-medium">{dispatcher.last_name}</TableCell>
                     <TableCell>{dispatcher.first_name}</TableCell>
-                    <TableCell>{dispatcher.badge}</TableCell>
-                    <TableCell>{dispatcher.rank || "—"}</TableCell>
+                    <TableCell>{dispatcher.emp_id}</TableCell>
+                    <TableCell>{new Date(dispatcher.seniority_date).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      {dispatcher.dispatcher_current_division?.divisions ? 
+                        `${dispatcher.dispatcher_current_division.divisions.code} - ${dispatcher.dispatcher_current_division.divisions.name}` : 
+                        "—"
+                      }
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Badge variant={dispatcher.is_active ? "default" : "secondary"}>
-                          {dispatcher.is_active ? "Active" : "Inactive"}
+                        <Badge variant={getStatusColor(dispatcher.status)}>
+                          {dispatcher.status.toUpperCase()}
                         </Badge>
-                        <Switch
-                          checked={dispatcher.is_active}
-                          onCheckedChange={() => toggleDispatcherStatus(dispatcher)}
-                        />
+                        {(dispatcher.status === 'active' || dispatcher.status === 'inactive') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleDispatcherStatus(dispatcher)}
+                            className="text-xs"
+                          >
+                            {dispatcher.status === 'active' ? 'DEACTIVATE' : 'ACTIVATE'}
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -442,12 +359,11 @@ export default function AdminDispatchersPage() {
                             onClick={() => {
                               setEditingDispatcher(dispatcher)
                               setDispatcherForm({
+                                emp_id: dispatcher.emp_id,
                                 first_name: dispatcher.first_name,
                                 last_name: dispatcher.last_name,
-                                badge: dispatcher.badge,
-                                rank: dispatcher.rank || "",
-                                tie_breaker: 0,
-                                is_active: dispatcher.is_active
+                                seniority_date: dispatcher.seniority_date,
+                                status: dispatcher.status
                               })
                             }}
                           >
@@ -465,7 +381,7 @@ export default function AdminDispatchersPage() {
                             <Tabs defaultValue="details">
                               <TabsList>
                                 <TabsTrigger value="details">DETAILS</TabsTrigger>
-                                <TabsTrigger value="qualifications">QUALIFICATIONS</TabsTrigger>
+                                <TabsTrigger value="assignments">JOB AWARDS</TabsTrigger>
                               </TabsList>
 
                               <TabsContent value="details" className="mt-4">
@@ -489,168 +405,46 @@ export default function AdminDispatchersPage() {
                                     </div>
                                   </div>
                                   <div>
-                                    <Label htmlFor="edit-badge">EMPLOYEE ID</Label>
+                                    <Label htmlFor="edit-emp-id">EMPLOYEE ID</Label>
                                     <Input
-                                      id="edit-badge"
-                                      value={dispatcherForm.badge}
-                                      onChange={(e) => setDispatcherForm(prev => ({ ...prev, badge: e.target.value }))}
+                                      id="edit-emp-id"
+                                      value={dispatcherForm.emp_id}
+                                      onChange={(e) => setDispatcherForm(prev => ({ ...prev, emp_id: e.target.value }))}
                                     />
                                   </div>
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                      <Label htmlFor="edit-rank">RANK</Label>
-                                      <Input
-                                        id="edit-rank"
-                                        value={dispatcherForm.rank}
-                                        onChange={(e) => setDispatcherForm(prev => ({ ...prev, rank: e.target.value }))}
-                                      />
-                                    </div>
-                                    <div>
-                                      <Label htmlFor="edit-tie-breaker">TIE BREAKER</Label>
-                                      <Input
-                                        id="edit-tie-breaker"
-                                        type="number"
-                                        value={dispatcherForm.tie_breaker}
-                                        onChange={(e) => setDispatcherForm(prev => ({ ...prev, tie_breaker: parseInt(e.target.value) || 0 }))}
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <Label htmlFor="edit-active">ACTIVE</Label>
-                                    <Switch
-                                      id="edit-active"
-                                      checked={dispatcherForm.is_active}
-                                      onCheckedChange={(checked) => setDispatcherForm(prev => ({ ...prev, is_active: checked }))}
+                                  <div>
+                                    <Label htmlFor="edit-seniority-date">SENIORITY DATE</Label>
+                                    <Input
+                                      id="edit-seniority-date"
+                                      type="date"
+                                      value={dispatcherForm.seniority_date}
+                                      onChange={(e) => setDispatcherForm(prev => ({ ...prev, seniority_date: e.target.value }))}
                                     />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="edit-status">STATUS</Label>
+                                    <Select value={dispatcherForm.status} onValueChange={(value: any) => setDispatcherForm(prev => ({ ...prev, status: value }))}>
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="active">Active</SelectItem>
+                                        <SelectItem value="inactive">Inactive</SelectItem>
+                                        <SelectItem value="retired">Retired</SelectItem>
+                                        <SelectItem value="terminated">Terminated</SelectItem>
+                                      </SelectContent>
+                                    </Select>
                                   </div>
                                   <Button onClick={updateDispatcher}>SAVE CHANGES</Button>
                                 </div>
                               </TabsContent>
 
-                              <TabsContent value="qualifications" className="mt-4">
+                              <TabsContent value="assignments" className="mt-4">
                                 <div className="space-y-4">
-                                  <div className="flex items-center justify-between">
-                                    <h3 className="text-lg font-medium">QUALIFICATIONS</h3>
+                                  <div className="text-center text-muted-foreground py-8">
+                                    <h3 className="text-lg font-medium mb-2">JOB AWARDS & ASSIGNMENTS</h3>
+                                    <p>Feature coming soon - manage job awards, hold-downs, and ATW assignments</p>
                                   </div>
-
-                                  {/* Add New Qualification */}
-                                  <Card>
-                                    <CardHeader className="pb-3">
-                                      <CardTitle className="text-base">ADD QUALIFICATION</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                      <div className="grid grid-cols-4 gap-2">
-                                        <div>
-                                          <Label htmlFor="qual-desk">DESK</Label>
-                                          <Select 
-                                            value={qualificationForm.desk_id} 
-                                            onValueChange={(value) => setQualificationForm(prev => ({ ...prev, desk_id: value }))}
-                                          >
-                                            <SelectTrigger>
-                                              <SelectValue placeholder="Select desk" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {desks.map(desk => (
-                                                <SelectItem key={desk.id} value={desk.id.toString()}>
-                                                  {desk.code} - {desk.name}
-                                                </SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
-                                        <div>
-                                          <Label htmlFor="qual-date">QUALIFIED ON</Label>
-                                          <Input
-                                            id="qual-date"
-                                            type="date"
-                                            value={qualificationForm.qualified_on}
-                                            onChange={(e) => setQualificationForm(prev => ({ ...prev, qualified_on: e.target.value }))}
-                                          />
-                                        </div>
-                                        <div>
-                                          <Label htmlFor="qual-trainer">TRAINER</Label>
-                                          <Select 
-                                            value={qualificationForm.trainer_id} 
-                                            onValueChange={(value) => setQualificationForm(prev => ({ ...prev, trainer_id: value }))}
-                                          >
-                                            <SelectTrigger>
-                                              <SelectValue placeholder="Optional" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              <SelectItem value="">No Trainer</SelectItem>
-                                              {dispatchers.filter(d => d.is_active).map(trainer => (
-                                                <SelectItem key={trainer.id} value={trainer.id.toString()}>
-                                                  {trainer.last_name}, {trainer.first_name}
-                                                </SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
-                                        <div className="flex items-end">
-                                          <Button onClick={addQualification} size="sm" className="w-full">
-                                            ADD
-                                          </Button>
-                                        </div>
-                                      </div>
-                                      <div className="mt-2">
-                                        <Label htmlFor="qual-notes">NOTES</Label>
-                                        <Textarea
-                                          id="qual-notes"
-                                          value={qualificationForm.notes}
-                                          onChange={(e) => setQualificationForm(prev => ({ ...prev, notes: e.target.value }))}
-                                          rows={2}
-                                          placeholder="Optional notes..."
-                                        />
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-
-                                  {/* Qualifications Table */}
-                                  <Table>
-                                    <TableHeader>
-                                      <TableRow>
-                                        <TableHead>DESK</TableHead>
-                                        <TableHead>QUALIFIED ON</TableHead>
-                                        <TableHead>TRAINER</TableHead>
-                                        <TableHead>STATUS</TableHead>
-                                        <TableHead>ACTIONS</TableHead>
-                                      </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                      {selectedDispatcherQuals.map(qual => (
-                                        <TableRow key={qual.id}>
-                                          <TableCell>
-                                            {qual.desks ? `${qual.desks.code} - ${qual.desks.name}` : `Desk ${qual.desk_id}`}
-                                          </TableCell>
-                                          <TableCell>{new Date(qual.qualified_on).toLocaleDateString()}</TableCell>
-                                          <TableCell>
-                                            {qual.trainers ? `${qual.trainers.last_name}, ${qual.trainers.first_name}` : "—"}
-                                          </TableCell>
-                                          <TableCell>
-                                            <Badge variant={qual.is_active ? "default" : "secondary"}>
-                                              {qual.is_active ? "Active" : "Inactive"}
-                                            </Badge>
-                                          </TableCell>
-                                          <TableCell>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={() => removeQualification(qual.id)}
-                                            >
-                                              <Trash2 className="h-3 w-3" />
-                                            </Button>
-                                          </TableCell>
-                                        </TableRow>
-                                      ))}
-                                      {selectedDispatcherQuals.length === 0 && (
-                                        <TableRow>
-                                          <TableCell colSpan={5} className="text-center text-muted-foreground">
-                                            No qualifications found
-                                          </TableCell>
-                                        </TableRow>
-                                      )}
-                                    </TableBody>
-                                  </Table>
                                 </div>
                               </TabsContent>
                             </Tabs>
@@ -662,7 +456,7 @@ export default function AdminDispatchersPage() {
                 ))}
                 {filteredDispatchers.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                       No dispatchers found
                     </TableCell>
                   </TableRow>
