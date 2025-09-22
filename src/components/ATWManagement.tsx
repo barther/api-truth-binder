@@ -314,7 +314,7 @@ export function ATWManagement() {
                          day === 'Sat' ? 'Saturday' : 'Sunday'}
                       </Label>
                        <Select
-                         value={weeklyMap[day]?.toString() || ""}
+                         value={weeklyMap[day] || ""}
                          onValueChange={(value) => {
                            setWeeklyMap(prev => ({
                              ...prev,

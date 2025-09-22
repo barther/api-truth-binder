@@ -71,6 +71,13 @@ export type Database = {
             foreignKeyName: "assignments_dispatcher_id_fkey"
             columns: ["dispatcher_id"]
             isOneToOne: false
+            referencedRelation: "dispatcher_current_assignment"
+            referencedColumns: ["dispatcher_id"]
+          },
+          {
+            foreignKeyName: "assignments_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
             referencedRelation: "dispatcher_current_division"
             referencedColumns: ["dispatcher_id"]
           },
@@ -180,6 +187,27 @@ export type Database = {
           is_active?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "desks_division_id_fkey"
+            columns: ["division_id"]
+            isOneToOne: false
+            referencedRelation: "dispatcher_current_assignment"
+            referencedColumns: ["division_id"]
+          },
+          {
+            foreignKeyName: "desks_division_id_fkey"
+            columns: ["division_id"]
+            isOneToOne: false
+            referencedRelation: "dispatcher_current_division"
+            referencedColumns: ["division_id"]
+          },
+          {
+            foreignKeyName: "desks_division_id_fkey"
+            columns: ["division_id"]
+            isOneToOne: false
+            referencedRelation: "dispatcher_current_ownership"
+            referencedColumns: ["division_id"]
+          },
           {
             foreignKeyName: "desks_division_id_fkey"
             columns: ["division_id"]
@@ -303,6 +331,13 @@ export type Database = {
             foreignKeyName: "job_awards_dispatcher_id_fkey"
             columns: ["dispatcher_id"]
             isOneToOne: false
+            referencedRelation: "dispatcher_current_assignment"
+            referencedColumns: ["dispatcher_id"]
+          },
+          {
+            foreignKeyName: "job_awards_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
             referencedRelation: "dispatcher_current_division"
             referencedColumns: ["dispatcher_id"]
           },
@@ -393,41 +428,14 @@ export type Database = {
           dispatcher_id: string | null
           division_id: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "assignments_dispatcher_id_fkey"
-            columns: ["dispatcher_id"]
-            isOneToOne: false
-            referencedRelation: "dispatcher_current_division"
-            referencedColumns: ["dispatcher_id"]
-          },
-          {
-            foreignKeyName: "assignments_dispatcher_id_fkey"
-            columns: ["dispatcher_id"]
-            isOneToOne: false
-            referencedRelation: "dispatcher_current_ownership"
-            referencedColumns: ["dispatcher_id"]
-          },
-          {
-            foreignKeyName: "assignments_dispatcher_id_fkey"
-            columns: ["dispatcher_id"]
-            isOneToOne: false
-            referencedRelation: "dispatchers"
-            referencedColumns: ["dispatcher_id"]
-          },
-          {
-            foreignKeyName: "desks_division_id_fkey"
-            columns: ["division_id"]
-            isOneToOne: false
-            referencedRelation: "divisions"
-            referencedColumns: ["division_id"]
-          },
-        ]
+        Relationships: []
       }
       dispatcher_current_division: {
         Row: {
+          code: string | null
           dispatcher_id: string | null
           division_id: string | null
+          name: string | null
         }
         Relationships: []
       }
@@ -436,15 +444,7 @@ export type Database = {
           dispatcher_id: string | null
           division_id: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "desks_division_id_fkey"
-            columns: ["division_id"]
-            isOneToOne: false
-            referencedRelation: "divisions"
-            referencedColumns: ["division_id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
