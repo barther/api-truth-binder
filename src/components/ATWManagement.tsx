@@ -19,13 +19,13 @@ interface ATWJob {
   policy: {
     variant: 'third_shift_weekly_map'
     days: {
-      Mon: number | null
-      Tue: number | null
-      Wed: number | null
-      Thu: number | null
-      Fri: number | null
-      Sat: number | null
-      Sun: number | null
+      Mon: string | null
+      Tue: string | null
+      Wed: string | null
+      Thu: string | null
+      Fri: string | null
+      Sat: string | null
+      Sun: string | null
     }
   }
   is_active: boolean
@@ -34,9 +34,9 @@ interface ATWJob {
 }
 
 interface Desk {
-  id: number
-  code: string
-  name: string
+  desk_id: string
+  desk_code: string
+  desk_name: string
   is_active: boolean
 }
 
@@ -51,7 +51,7 @@ export function ATWManagement() {
   // Form state
   const [label, setLabel] = useState("")
   const [isActive, setIsActive] = useState(true)
-  const [weeklyMap, setWeeklyMap] = useState<{[key: string]: number | null}>({
+  const [weeklyMap, setWeeklyMap] = useState<{[key: string]: string | null}>({
     Mon: null,
     Tue: null,
     Wed: null,
@@ -176,10 +176,10 @@ export function ATWManagement() {
     }
   }
 
-  const getDeskLabel = (deskId: number | null) => {
+  const getDeskLabel = (deskId: string | null) => {
     if (!deskId) return "No Assignment"
-    const desk = desks.find(d => d.id === deskId)
-    return desk ? `${desk.code} - ${desk.name}` : `Desk ${deskId}`
+    const desk = desks.find(d => d.desk_id === deskId)
+    return desk ? `${desk.desk_code} - ${desk.desk_name}` : `Desk ${deskId}`
   }
 
   if (loading) {
@@ -239,10 +239,10 @@ export function ATWManagement() {
                       <div key={day} className="text-center">
                         <div className="font-medium text-xs text-muted-foreground mb-1">{day}</div>
                         <div className="text-xs p-1 rounded bg-surface-light">
-                          {job.policy.days[day] ? (
-                            <span className="text-foreground">
-                              {desks.find(d => d.id === job.policy.days[day])?.code || `#${job.policy.days[day]}`}
-                            </span>
+                           {job.policy.days[day] ? (
+                             <span className="text-foreground">
+                               {desks.find(d => d.desk_id === job.policy.days[day])?.desk_code || `#${job.policy.days[day]}`}
+                             </span>
                           ) : (
                             <span className="text-muted-foreground">—</span>
                           )}
@@ -313,25 +313,25 @@ export function ATWManagement() {
                          day === 'Fri' ? 'Friday' :
                          day === 'Sat' ? 'Saturday' : 'Sunday'}
                       </Label>
-                      <Select
-                        value={weeklyMap[day]?.toString() || ""}
-                        onValueChange={(value) => {
-                          setWeeklyMap(prev => ({
-                            ...prev,
-                            [day]: value ? parseInt(value) : null
-                          }))
-                        }}
-                      >
+                       <Select
+                         value={weeklyMap[day]?.toString() || ""}
+                         onValueChange={(value) => {
+                           setWeeklyMap(prev => ({
+                             ...prev,
+                             [day]: value === "none" ? null : value
+                           }))
+                         }}
+                       >
                         <SelectTrigger>
                           <SelectValue placeholder="No assignment" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">No assignment</SelectItem>
-                          {desks.filter(d => d.is_active).map(desk => (
-                            <SelectItem key={desk.id} value={desk.id.toString()}>
-                              {desk.code} - {desk.name}
-                            </SelectItem>
-                          ))}
+                         <SelectContent>
+                           <SelectItem value="none">No assignment</SelectItem>
+                           {desks.filter(d => d.is_active).map(desk => (
+                             <SelectItem key={desk.desk_id} value={desk.desk_id}>
+                               {desk.desk_code} - {desk.desk_name}
+                             </SelectItem>
+                           ))}
                         </SelectContent>
                       </Select>
                     </div>

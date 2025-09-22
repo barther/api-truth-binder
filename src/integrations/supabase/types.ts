@@ -97,6 +97,33 @@ export type Database = {
           },
         ]
       }
+      atw_jobs: {
+        Row: {
+          created_at: string
+          id: number
+          is_active: boolean
+          label: string
+          policy: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          is_active?: boolean
+          label: string
+          policy?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          is_active?: boolean
+          label?: string
+          policy?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
