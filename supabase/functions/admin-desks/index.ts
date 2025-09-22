@@ -131,8 +131,10 @@ serve(async (req) => {
     }
 
     if (req.method === 'DELETE') {
-      // DELETE /admin-desks/{id} - Delete a desk
-      const deskId = pathParts[1];
+      // DELETE /admin-desks - Delete a desk (ID in body)
+      const body = await req.json();
+      const { id: deskId } = body;
+      
       if (!deskId) {
         return new Response(JSON.stringify({ error: 'Desk ID required' }), {
           status: 400,

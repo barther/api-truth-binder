@@ -140,8 +140,9 @@ export default function AdminDesksPage() {
   const deleteDesk = async () => {
     if (!selectedDesk) return
     try {
-      const { error } = await supabase.functions.invoke('admin-desks/' + selectedDesk.id, {
-        method: 'DELETE'
+      const { error } = await supabase.functions.invoke('admin-desks', {
+        method: 'DELETE',
+        body: { id: selectedDesk.id }
       })
       
       if (error) {
