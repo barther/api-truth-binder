@@ -138,8 +138,10 @@ serve(async (req) => {
     }
 
     if (req.method === 'DELETE') {
-      // DELETE /admin-dispatchers/{id} - Delete a dispatcher
-      const dispatcherId = pathParts[1];
+      // DELETE /admin-dispatchers - Delete a dispatcher (ID in body)
+      const body = await req.json();
+      const { id: dispatcherId } = body;
+      
       if (!dispatcherId) {
         return new Response(JSON.stringify({ error: 'Dispatcher ID required' }), {
           status: 400,

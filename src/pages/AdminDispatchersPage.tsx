@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search } from "lucide-react"
+import { Plus, Search, Trash2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -98,6 +98,28 @@ export default function AdminDispatchersPage() {
       toast({
         title: "Error",
         description: error.message || "Failed to create dispatcher",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const deleteDispatcher = async (dispatcherId: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('admin-dispatchers', {
+        method: 'DELETE',
+        body: { id: dispatcherId }
+      })
+      
+      if (error) {
+        throw new Error(error.message || 'Failed to delete dispatcher')
+      }
+      
+      setDispatchers(prev => prev.filter(d => d.id !== dispatcherId))
+      toast({ title: "Success", description: "Dispatcher deleted successfully" })
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete dispatcher",
         variant: "destructive"
       })
     }
@@ -204,14 +226,15 @@ export default function AdminDispatchersPage() {
         </CardHeader>
         <CardContent>
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Employee ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Seniority Date</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
+             <TableHeader>
+               <TableRow>
+                 <TableHead>Employee ID</TableHead>
+                 <TableHead>Name</TableHead>
+                 <TableHead>Seniority Date</TableHead>
+                 <TableHead>Status</TableHead>
+                 <TableHead>Actions</TableHead>
+               </TableRow>
+             </TableHeader>
             <TableBody>
               {filteredDispatchers.map(dispatcher => (
                 <TableRow key={dispatcher.id}>
@@ -224,17 +247,27 @@ export default function AdminDispatchersPage() {
                       dispatcher.status === 'INACTIVE' ? 'secondary' : 'outline'
                     }>
                       {dispatcher.status}
-                    </Badge>
-                  </TableCell>
+                     </Badge>
+                   </TableCell>
+                   <TableCell>
+                     <Button 
+                       variant="ghost" 
+                       size="sm" 
+                       onClick={() => deleteDispatcher(dispatcher.id)}
+                       className="text-destructive hover:text-destructive"
+                     >
+                       <Trash2 className="h-4 w-4" />
+                     </Button>
+                   </TableCell>
                 </TableRow>
               ))}
-              {filteredDispatchers.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    No dispatchers found
-                  </TableCell>
-                </TableRow>
-              )}
+               {filteredDispatchers.length === 0 && (
+                 <TableRow>
+                   <TableCell colSpan={5} className="text-center text-muted-foreground">
+                     No dispatchers found
+                   </TableCell>
+                 </TableRow>
+               )}
             </TableBody>
           </Table>
         </CardContent>
