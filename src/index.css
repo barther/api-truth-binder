@@ -113,6 +113,11 @@
     @apply font-semibold;
   }
 
+  h1, h2 {
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+
   /* Schedule Grid Styles */
   .schedule-grid {
     @apply grid gap-1 p-4;
