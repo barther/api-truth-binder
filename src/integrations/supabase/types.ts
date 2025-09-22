@@ -42,116 +42,60 @@ export type Database = {
           starts_at?: string
           type?: Database["public"]["Enums"]["absence_type"]
         }
-        Relationships: [
-          {
-            foreignKeyName: "absences_dispatcher_id_fkey"
-            columns: ["dispatcher_id"]
-            isOneToOne: false
-            referencedRelation: "dispatchers"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       assignments: {
         Row: {
-          created_at: string | null
-          created_by: number | null
-          deleted_at: string | null
-          dispatcher_id: number
-          ends_at: string
-          id: number
-          requires_trainer: boolean | null
-          source: Database["public"]["Enums"]["assignment_source"]
-          starts_at: string
-          trainer_id: number | null
-          trick_instance_id: number
-          version: number | null
+          assignment_id: string
+          dispatcher_id: string
+          source: string
+          trick_id: string
+          work_date: string
         }
         Insert: {
-          created_at?: string | null
-          created_by?: number | null
-          deleted_at?: string | null
-          dispatcher_id: number
-          ends_at: string
-          id?: number
-          requires_trainer?: boolean | null
-          source?: Database["public"]["Enums"]["assignment_source"]
-          starts_at: string
-          trainer_id?: number | null
-          trick_instance_id: number
-          version?: number | null
+          assignment_id?: string
+          dispatcher_id: string
+          source: string
+          trick_id: string
+          work_date: string
         }
         Update: {
-          created_at?: string | null
-          created_by?: number | null
-          deleted_at?: string | null
-          dispatcher_id?: number
-          ends_at?: string
-          id?: number
-          requires_trainer?: boolean | null
-          source?: Database["public"]["Enums"]["assignment_source"]
-          starts_at?: string
-          trainer_id?: number | null
-          trick_instance_id?: number
-          version?: number | null
+          assignment_id?: string
+          dispatcher_id?: string
+          source?: string
+          trick_id?: string
+          work_date?: string
         }
         Relationships: [
           {
-            foreignKeyName: "assignments_created_by_fkey"
-            columns: ["created_by"]
+            foreignKeyName: "assignments_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
             isOneToOne: false
-            referencedRelation: "dispatchers"
-            referencedColumns: ["id"]
+            referencedRelation: "dispatcher_current_division"
+            referencedColumns: ["dispatcher_id"]
+          },
+          {
+            foreignKeyName: "assignments_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "dispatcher_current_ownership"
+            referencedColumns: ["dispatcher_id"]
           },
           {
             foreignKeyName: "assignments_dispatcher_id_fkey"
             columns: ["dispatcher_id"]
             isOneToOne: false
             referencedRelation: "dispatchers"
-            referencedColumns: ["id"]
+            referencedColumns: ["dispatcher_id"]
           },
           {
-            foreignKeyName: "assignments_trainer_id_fkey"
-            columns: ["trainer_id"]
+            foreignKeyName: "assignments_trick_id_fkey"
+            columns: ["trick_id"]
             isOneToOne: false
-            referencedRelation: "dispatchers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assignments_trick_instance_id_fkey"
-            columns: ["trick_instance_id"]
-            isOneToOne: false
-            referencedRelation: "trick_instances"
-            referencedColumns: ["id"]
+            referencedRelation: "tricks"
+            referencedColumns: ["trick_id"]
           },
         ]
-      }
-      atw_jobs: {
-        Row: {
-          created_at: string
-          id: number
-          is_active: boolean
-          label: string
-          policy: Json
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-          is_active?: boolean
-          label: string
-          policy: Json
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: number
-          is_active?: boolean
-          label?: string
-          policy?: Json
-          updated_at?: string
-        }
-        Relationships: []
       }
       audit_logs: {
         Row: {
@@ -184,79 +128,82 @@ export type Database = {
           entity_id?: number
           id?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "audit_logs_actor_fkey"
-            columns: ["actor"]
-            isOneToOne: false
-            referencedRelation: "dispatchers"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       desks: {
         Row: {
-          code: string
-          created_at: string | null
-          id: number
-          is_active: boolean | null
-          name: string
-          territory: string | null
-          updated_at: string | null
+          desk_code: string
+          desk_id: string
+          desk_name: string
+          division_id: string
+          is_active: boolean
         }
         Insert: {
-          code: string
-          created_at?: string | null
-          id?: number
-          is_active?: boolean | null
-          name: string
-          territory?: string | null
-          updated_at?: string | null
+          desk_code: string
+          desk_id?: string
+          desk_name: string
+          division_id: string
+          is_active?: boolean
         }
         Update: {
-          code?: string
-          created_at?: string | null
-          id?: number
-          is_active?: boolean | null
-          name?: string
-          territory?: string | null
-          updated_at?: string | null
+          desk_code?: string
+          desk_id?: string
+          desk_name?: string
+          division_id?: string
+          is_active?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "desks_division_id_fkey"
+            columns: ["division_id"]
+            isOneToOne: false
+            referencedRelation: "divisions"
+            referencedColumns: ["division_id"]
+          },
+        ]
       }
       dispatchers: {
         Row: {
-          badge: string
-          created_at: string | null
+          dispatcher_id: string
+          emp_id: string
           first_name: string
-          hire_date: string
-          id: number
-          is_active: boolean | null
           last_name: string
-          rank: string | null
-          updated_at: string | null
+          seniority_date: string
+          status: string
         }
         Insert: {
-          badge: string
-          created_at?: string | null
+          dispatcher_id?: string
+          emp_id: string
           first_name: string
-          hire_date: string
-          id?: number
-          is_active?: boolean | null
           last_name: string
-          rank?: string | null
-          updated_at?: string | null
+          seniority_date: string
+          status: string
         }
         Update: {
-          badge?: string
-          created_at?: string | null
+          dispatcher_id?: string
+          emp_id?: string
           first_name?: string
-          hire_date?: string
-          id?: number
-          is_active?: boolean | null
           last_name?: string
-          rank?: string | null
-          updated_at?: string | null
+          seniority_date?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      divisions: {
+        Row: {
+          code: string
+          division_id: string
+          name: string
+        }
+        Insert: {
+          code: string
+          division_id?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          division_id?: string
+          name?: string
         }
         Relationships: []
       }
@@ -297,188 +244,103 @@ export type Database = {
           trick_id?: number
           vacancy_reason?: Database["public"]["Enums"]["vacancy_reason"]
         }
+        Relationships: []
+      }
+      job_awards: {
+        Row: {
+          dispatcher_id: string
+          end_date: string | null
+          job_award_id: string
+          kind: string
+          start_date: string
+          trick_id: string
+        }
+        Insert: {
+          dispatcher_id: string
+          end_date?: string | null
+          job_award_id?: string
+          kind: string
+          start_date: string
+          trick_id: string
+        }
+        Update: {
+          dispatcher_id?: string
+          end_date?: string | null
+          job_award_id?: string
+          kind?: string
+          start_date?: string
+          trick_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "hold_downs_awarded_to_fkey"
-            columns: ["awarded_to"]
+            foreignKeyName: "job_awards_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "dispatcher_current_division"
+            referencedColumns: ["dispatcher_id"]
+          },
+          {
+            foreignKeyName: "job_awards_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "dispatcher_current_ownership"
+            referencedColumns: ["dispatcher_id"]
+          },
+          {
+            foreignKeyName: "job_awards_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
             isOneToOne: false
             referencedRelation: "dispatchers"
-            referencedColumns: ["id"]
+            referencedColumns: ["dispatcher_id"]
           },
           {
-            foreignKeyName: "hold_downs_desk_id_fkey"
-            columns: ["desk_id"]
-            isOneToOne: false
-            referencedRelation: "desks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "hold_downs_trick_id_fkey"
+            foreignKeyName: "job_awards_trick_id_fkey"
             columns: ["trick_id"]
             isOneToOne: false
             referencedRelation: "tricks"
-            referencedColumns: ["id"]
+            referencedColumns: ["trick_id"]
           },
         ]
       }
-      qualifications: {
+      shifts: {
         Row: {
-          created_at: string | null
-          desk_id: number
-          dispatcher_id: number
-          id: number
-          is_active: boolean | null
-          notes: string | null
-          qualified_on: string
-          trainer_id: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          desk_id: number
-          dispatcher_id: number
-          id?: number
-          is_active?: boolean | null
-          notes?: string | null
-          qualified_on: string
-          trainer_id?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          desk_id?: number
-          dispatcher_id?: number
-          id?: number
-          is_active?: boolean | null
-          notes?: string | null
-          qualified_on?: string
-          trainer_id?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "qualifications_desk_id_fkey"
-            columns: ["desk_id"]
-            isOneToOne: false
-            referencedRelation: "desks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "qualifications_dispatcher_id_fkey"
-            columns: ["dispatcher_id"]
-            isOneToOne: false
-            referencedRelation: "dispatchers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "qualifications_trainer_id_fkey"
-            columns: ["trainer_id"]
-            isOneToOne: false
-            referencedRelation: "dispatchers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      seniority: {
-        Row: {
-          created_at: string | null
-          dispatcher_id: number
-          rank: string
-          tie_breaker: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          dispatcher_id: number
-          rank: string
-          tie_breaker?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          dispatcher_id?: number
-          rank?: string
-          tie_breaker?: number | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "seniority_dispatcher_id_fkey"
-            columns: ["dispatcher_id"]
-            isOneToOne: true
-            referencedRelation: "dispatchers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      trick_instances: {
-        Row: {
-          created_at: string | null
+          code: string
           ends_at: string
-          id: number
-          is_holiday: boolean | null
+          shift_id: number
           starts_at: string
-          trick_id: number
         }
         Insert: {
-          created_at?: string | null
+          code: string
           ends_at: string
-          id?: number
-          is_holiday?: boolean | null
+          shift_id?: number
           starts_at: string
-          trick_id: number
         }
         Update: {
-          created_at?: string | null
+          code?: string
           ends_at?: string
-          id?: number
-          is_holiday?: boolean | null
+          shift_id?: number
           starts_at?: string
-          trick_id?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "trick_instances_trick_id_fkey"
-            columns: ["trick_id"]
-            isOneToOne: false
-            referencedRelation: "tricks"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tricks: {
         Row: {
-          created_at: string | null
-          days_mask: unknown
-          desk_id: number
-          id: number
-          is_active: boolean | null
-          name: string
-          shift_end: string
-          shift_start: string
-          timezone: string | null
-          updated_at: string | null
+          desk_id: string
+          shift_id: number
+          title: string
+          trick_id: string
         }
         Insert: {
-          created_at?: string | null
-          days_mask: unknown
-          desk_id: number
-          id?: number
-          is_active?: boolean | null
-          name: string
-          shift_end: string
-          shift_start: string
-          timezone?: string | null
-          updated_at?: string | null
+          desk_id: string
+          shift_id: number
+          title: string
+          trick_id?: string
         }
         Update: {
-          created_at?: string | null
-          days_mask?: unknown
-          desk_id?: number
-          id?: number
-          is_active?: boolean | null
-          name?: string
-          shift_end?: string
-          shift_start?: string
-          timezone?: string | null
-          updated_at?: string | null
+          desk_id?: string
+          shift_id?: number
+          title?: string
+          trick_id?: string
         }
         Relationships: [
           {
@@ -486,16 +348,303 @@ export type Database = {
             columns: ["desk_id"]
             isOneToOne: false
             referencedRelation: "desks"
-            referencedColumns: ["id"]
+            referencedColumns: ["desk_id"]
+          },
+          {
+            foreignKeyName: "tricks_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["shift_id"]
           },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      dispatcher_current_assignment: {
+        Row: {
+          dispatcher_id: string | null
+          division_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "dispatcher_current_division"
+            referencedColumns: ["dispatcher_id"]
+          },
+          {
+            foreignKeyName: "assignments_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "dispatcher_current_ownership"
+            referencedColumns: ["dispatcher_id"]
+          },
+          {
+            foreignKeyName: "assignments_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "dispatchers"
+            referencedColumns: ["dispatcher_id"]
+          },
+          {
+            foreignKeyName: "desks_division_id_fkey"
+            columns: ["division_id"]
+            isOneToOne: false
+            referencedRelation: "divisions"
+            referencedColumns: ["division_id"]
+          },
+        ]
+      }
+      dispatcher_current_division: {
+        Row: {
+          dispatcher_id: string | null
+          division_id: string | null
+        }
+        Relationships: []
+      }
+      dispatcher_current_ownership: {
+        Row: {
+          dispatcher_id: string | null
+          division_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "desks_division_id_fkey"
+            columns: ["division_id"]
+            isOneToOne: false
+            referencedRelation: "divisions"
+            referencedColumns: ["division_id"]
+          },
+        ]
+      }
     }
     Functions: {
-      [_ in never]: never
+      gbt_bit_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_bool_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_bool_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_bpchar_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_bytea_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_cash_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_cash_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_date_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_date_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_decompress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_enum_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_enum_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_float4_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_float4_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_float8_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_float8_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_inet_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_int2_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_int2_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_int4_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_int4_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_int8_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_int8_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_intv_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_intv_decompress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_intv_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_macad_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_macad_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_macad8_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_macad8_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_numeric_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_oid_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_oid_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_text_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_time_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_time_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_timetz_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_ts_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_ts_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_tstz_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_uuid_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_uuid_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_var_decompress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbt_var_fetch: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbtreekey_var_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbtreekey_var_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbtreekey16_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbtreekey16_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbtreekey2_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbtreekey2_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbtreekey32_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbtreekey32_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbtreekey4_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbtreekey4_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbtreekey8_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gbtreekey8_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
     }
     Enums: {
       absence_type: "VACATION" | "SICK" | "FMLA" | "OOS" | "OTHER"
