@@ -16,120 +16,134 @@ export type Database = {
     Tables: {
       absences: {
         Row: {
-          created_at: string | null
-          dispatcher_id: number
-          ends_at: string
-          id: number
-          note: string | null
-          starts_at: string
-          type: Database["public"]["Enums"]["absence_type"]
+          dispatcher_id: string
+          end_date: string
+          id: string
+          reason: string | null
+          start_date: string
         }
         Insert: {
-          created_at?: string | null
-          dispatcher_id: number
-          ends_at: string
-          id?: number
-          note?: string | null
-          starts_at: string
-          type: Database["public"]["Enums"]["absence_type"]
+          dispatcher_id: string
+          end_date: string
+          id?: string
+          reason?: string | null
+          start_date: string
         }
         Update: {
-          created_at?: string | null
-          dispatcher_id?: number
-          ends_at?: string
-          id?: number
-          note?: string | null
-          starts_at?: string
-          type?: Database["public"]["Enums"]["absence_type"]
+          dispatcher_id?: string
+          end_date?: string
+          id?: string
+          reason?: string | null
+          start_date?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "absences_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "dispatchers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       assignments: {
         Row: {
-          assignment_id: string
-          dispatcher_id: string
+          dispatcher_id: string | null
+          id: string
+          job_id: string
+          notes: string | null
+          requires_trainer: boolean
+          service_date: string
           source: string
-          trick_id: string
-          work_date: string
         }
         Insert: {
-          assignment_id?: string
-          dispatcher_id: string
+          dispatcher_id?: string | null
+          id?: string
+          job_id: string
+          notes?: string | null
+          requires_trainer?: boolean
+          service_date: string
           source: string
-          trick_id: string
-          work_date: string
         }
         Update: {
-          assignment_id?: string
-          dispatcher_id?: string
+          dispatcher_id?: string | null
+          id?: string
+          job_id?: string
+          notes?: string | null
+          requires_trainer?: boolean
+          service_date?: string
           source?: string
-          trick_id?: string
-          work_date?: string
         }
         Relationships: [
           {
             foreignKeyName: "assignments_dispatcher_id_fkey"
             columns: ["dispatcher_id"]
             isOneToOne: false
-            referencedRelation: "dispatcher_current_assignment"
-            referencedColumns: ["dispatcher_id"]
-          },
-          {
-            foreignKeyName: "assignments_dispatcher_id_fkey"
-            columns: ["dispatcher_id"]
-            isOneToOne: false
-            referencedRelation: "dispatcher_current_division"
-            referencedColumns: ["dispatcher_id"]
-          },
-          {
-            foreignKeyName: "assignments_dispatcher_id_fkey"
-            columns: ["dispatcher_id"]
-            isOneToOne: false
-            referencedRelation: "dispatcher_current_ownership"
-            referencedColumns: ["dispatcher_id"]
-          },
-          {
-            foreignKeyName: "assignments_dispatcher_id_fkey"
-            columns: ["dispatcher_id"]
-            isOneToOne: false
             referencedRelation: "dispatchers"
-            referencedColumns: ["dispatcher_id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "assignments_trick_id_fkey"
-            columns: ["trick_id"]
+            foreignKeyName: "assignments_job_id_fkey"
+            columns: ["job_id"]
             isOneToOne: false
-            referencedRelation: "tricks"
-            referencedColumns: ["trick_id"]
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
           },
         ]
       }
       atw_jobs: {
         Row: {
-          created_at: string
-          id: number
-          is_active: boolean
-          label: string
-          policy: Json
-          updated_at: string
+          active: boolean
+          default_shift: string
+          id: string
+          name: string
         }
         Insert: {
-          created_at?: string
-          id?: number
-          is_active?: boolean
-          label: string
-          policy?: Json
-          updated_at?: string
+          active?: boolean
+          default_shift: string
+          id?: string
+          name: string
         }
         Update: {
-          created_at?: string
-          id?: number
-          is_active?: boolean
-          label?: string
-          policy?: Json
-          updated_at?: string
+          active?: boolean
+          default_shift?: string
+          id?: string
+          name?: string
         }
         Relationships: []
+      }
+      atw_rotation: {
+        Row: {
+          atw_job_id: string
+          dow: number
+          job_id: string
+        }
+        Insert: {
+          atw_job_id: string
+          dow: number
+          job_id: string
+        }
+        Update: {
+          atw_job_id?: string
+          dow?: number
+          job_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atw_rotation_atw_job_id_fkey"
+            columns: ["atw_job_id"]
+            isOneToOne: false
+            referencedRelation: "atw_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atw_rotation_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audit_logs: {
         Row: {
@@ -166,78 +180,82 @@ export type Database = {
       }
       desks: {
         Row: {
-          desk_code: string
-          desk_id: string
-          desk_name: string
-          division_id: string
+          code: string
+          division: string
+          id: string
           is_active: boolean
+          name: string
         }
         Insert: {
-          desk_code: string
-          desk_id?: string
-          desk_name: string
-          division_id: string
+          code: string
+          division: string
+          id?: string
           is_active?: boolean
+          name: string
         }
         Update: {
-          desk_code?: string
-          desk_id?: string
-          desk_name?: string
-          division_id?: string
+          code?: string
+          division?: string
+          id?: string
           is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
+      dispatcher_qualifications: {
+        Row: {
+          desk_id: string
+          dispatcher_id: string
+          qualified: boolean
+        }
+        Insert: {
+          desk_id: string
+          dispatcher_id: string
+          qualified?: boolean
+        }
+        Update: {
+          desk_id?: string
+          dispatcher_id?: string
+          qualified?: boolean
         }
         Relationships: [
           {
-            foreignKeyName: "desks_division_id_fkey"
-            columns: ["division_id"]
+            foreignKeyName: "dispatcher_qualifications_desk_id_fkey"
+            columns: ["desk_id"]
             isOneToOne: false
-            referencedRelation: "dispatcher_current_assignment"
-            referencedColumns: ["division_id"]
+            referencedRelation: "desks"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "desks_division_id_fkey"
-            columns: ["division_id"]
+            foreignKeyName: "dispatcher_qualifications_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
             isOneToOne: false
-            referencedRelation: "dispatcher_current_division"
-            referencedColumns: ["division_id"]
-          },
-          {
-            foreignKeyName: "desks_division_id_fkey"
-            columns: ["division_id"]
-            isOneToOne: false
-            referencedRelation: "dispatcher_current_ownership"
-            referencedColumns: ["division_id"]
-          },
-          {
-            foreignKeyName: "desks_division_id_fkey"
-            columns: ["division_id"]
-            isOneToOne: false
-            referencedRelation: "divisions"
-            referencedColumns: ["division_id"]
+            referencedRelation: "dispatchers"
+            referencedColumns: ["id"]
           },
         ]
       }
       dispatchers: {
         Row: {
-          dispatcher_id: string
           emp_id: string
           first_name: string
+          id: string
           last_name: string
           seniority_date: string
           status: string
         }
         Insert: {
-          dispatcher_id?: string
           emp_id: string
           first_name: string
+          id?: string
           last_name: string
           seniority_date: string
           status: string
         }
         Update: {
-          dispatcher_id?: string
           emp_id?: string
           first_name?: string
+          id?: string
           last_name?: string
           seniority_date?: string
           status?: string
@@ -326,41 +344,76 @@ export type Database = {
           start_date?: string
           trick_id?: string
         }
+        Relationships: []
+      }
+      job_ownerships: {
+        Row: {
+          dispatcher_id: string
+          end_date: string | null
+          id: string
+          job_id: string
+          source: string
+          start_date: string
+        }
+        Insert: {
+          dispatcher_id: string
+          end_date?: string | null
+          id?: string
+          job_id: string
+          source: string
+          start_date: string
+        }
+        Update: {
+          dispatcher_id?: string
+          end_date?: string | null
+          id?: string
+          job_id?: string
+          source?: string
+          start_date?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "job_awards_dispatcher_id_fkey"
-            columns: ["dispatcher_id"]
-            isOneToOne: false
-            referencedRelation: "dispatcher_current_assignment"
-            referencedColumns: ["dispatcher_id"]
-          },
-          {
-            foreignKeyName: "job_awards_dispatcher_id_fkey"
-            columns: ["dispatcher_id"]
-            isOneToOne: false
-            referencedRelation: "dispatcher_current_division"
-            referencedColumns: ["dispatcher_id"]
-          },
-          {
-            foreignKeyName: "job_awards_dispatcher_id_fkey"
-            columns: ["dispatcher_id"]
-            isOneToOne: false
-            referencedRelation: "dispatcher_current_ownership"
-            referencedColumns: ["dispatcher_id"]
-          },
-          {
-            foreignKeyName: "job_awards_dispatcher_id_fkey"
+            foreignKeyName: "job_ownerships_dispatcher_id_fkey"
             columns: ["dispatcher_id"]
             isOneToOne: false
             referencedRelation: "dispatchers"
-            referencedColumns: ["dispatcher_id"]
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "job_awards_trick_id_fkey"
+            foreignKeyName: "job_ownerships_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          id: string
+          job_code: string
+          notes: string | null
+          trick_id: string
+        }
+        Insert: {
+          id?: string
+          job_code: string
+          notes?: string | null
+          trick_id: string
+        }
+        Update: {
+          id?: string
+          job_code?: string
+          notes?: string | null
+          trick_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_trick_id_fkey"
             columns: ["trick_id"]
             isOneToOne: false
             referencedRelation: "tricks"
-            referencedColumns: ["trick_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -388,21 +441,21 @@ export type Database = {
       tricks: {
         Row: {
           desk_id: string
-          shift_id: number
-          title: string
-          trick_id: string
+          id: string
+          shift: string
+          work_days: number[]
         }
         Insert: {
           desk_id: string
-          shift_id: number
-          title: string
-          trick_id?: string
+          id?: string
+          shift: string
+          work_days: number[]
         }
         Update: {
           desk_id?: string
-          shift_id?: number
-          title?: string
-          trick_id?: string
+          id?: string
+          shift?: string
+          work_days?: number[]
         }
         Relationships: [
           {
@@ -410,44 +463,28 @@ export type Database = {
             columns: ["desk_id"]
             isOneToOne: false
             referencedRelation: "desks"
-            referencedColumns: ["desk_id"]
-          },
-          {
-            foreignKeyName: "tricks_shift_id_fkey"
-            columns: ["shift_id"]
-            isOneToOne: false
-            referencedRelation: "shifts"
-            referencedColumns: ["shift_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
     }
     Views: {
-      dispatcher_current_assignment: {
-        Row: {
-          dispatcher_id: string | null
-          division_id: string | null
-        }
-        Relationships: []
-      }
-      dispatcher_current_division: {
-        Row: {
-          code: string | null
-          dispatcher_id: string | null
-          division_id: string | null
-          name: string | null
-        }
-        Relationships: []
-      }
-      dispatcher_current_ownership: {
-        Row: {
-          dispatcher_id: string | null
-          division_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
+      active_job_owner_on: {
+        Args: { p_date: string; p_job_id: string }
+        Returns: {
+          dispatcher_id: string
+          end_date: string
+          source: string
+          start_date: string
+        }[]
+      }
+      clear_assignment: {
+        Args: { p_date: string; p_job_id: string }
+        Returns: undefined
+      }
       gbt_bit_compress: {
         Args: { "": unknown }
         Returns: unknown
@@ -671,6 +708,35 @@ export type Database = {
       gbtreekey8_out: {
         Args: { "": unknown }
         Returns: unknown
+      }
+      jobs_for_date: {
+        Args: { p_date: string }
+        Returns: {
+          desk_id: string
+          explicit_assignment_id: string
+          job_code: string
+          job_id: string
+          shift: string
+        }[]
+      }
+      set_job_owner: {
+        Args: {
+          p_dispatcher_id: string
+          p_job_id: string
+          p_source: string
+          p_start: string
+        }
+        Returns: undefined
+      }
+      upsert_assignment: {
+        Args: {
+          p_date: string
+          p_dispatcher_id: string
+          p_job_id: string
+          p_requires_trainer?: boolean
+          p_source: string
+        }
+        Returns: string
       }
     }
     Enums: {

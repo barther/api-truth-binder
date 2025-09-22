@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "./components/AppLayout";
 import { DragDropDeskBoard } from "./components/DragDropDeskBoard";
+import JobOwnershipBoard from "./components/JobOwnershipBoard";
 import { DispatchersPage } from "./pages/DispatchersPage";
 import { VacanciesPage } from "./pages/VacanciesPage";
 import { HoldDownsPage } from "./pages/HoldDownsPage";
@@ -27,6 +28,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<AppLayout />}>
             <Route index element={<DragDropDeskBoard />} />
+            <Route path="schedule" element={<JobOwnershipBoard />} />
             <Route path="dispatchers" element={<DispatchersPage />} />
             <Route path="vacancies" element={<VacanciesPage />} />
             <Route path="hold-downs" element={<HoldDownsPage />} />
