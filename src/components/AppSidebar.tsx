@@ -16,6 +16,7 @@ import {
 const navigationItems = [
   { title: "Desk Board", url: "/", icon: Calendar },
   { title: "Dispatchers", url: "/dispatchers", icon: Users },
+  { title: "Tricks", url: "/tricks", icon: Clock },
   { title: "Vacancies", url: "/vacancies", icon: AlertTriangle },
   { title: "Hold-Downs", url: "/hold-downs", icon: Clock },
   { title: "Audit Log", url: "/audit", icon: FileText },
