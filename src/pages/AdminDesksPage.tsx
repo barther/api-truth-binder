@@ -137,6 +137,29 @@ export default function AdminDesksPage() {
     }
   }
 
+  const deleteDesk = async () => {
+    if (!selectedDesk) return
+    try {
+      const { error } = await supabase.functions.invoke('admin-desks/' + selectedDesk.id, {
+        method: 'DELETE'
+      })
+      
+      if (error) {
+        throw new Error(error.message || 'Failed to delete desk')
+      }
+      
+      setDesks(prev => prev.filter(d => d.id !== selectedDesk.id))
+      setSelectedDesk(desks.length > 1 ? desks.find(d => d.id !== selectedDesk.id) || null : null)
+      toast({ title: "Success", description: "Desk deleted successfully" })
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete desk",
+        variant: "destructive"
+      })
+    }
+  }
+
   if (loading) {
     return <div className="p-6">Loading desks...</div>
   }
@@ -362,7 +385,10 @@ export default function AdminDesksPage() {
                       onCheckedChange={(checked) => setDeskForm(prev => ({ ...prev, is_active: checked }))}
                     />
                   </div>
-                  <Button onClick={updateDesk}>SAVE CHANGES</Button>
+                  <div className="flex gap-2">
+                    <Button onClick={updateDesk}>SAVE CHANGES</Button>
+                    <Button variant="destructive" onClick={deleteDesk}>DELETE DESK</Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
