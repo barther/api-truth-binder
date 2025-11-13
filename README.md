@@ -1,73 +1,139 @@
-# Welcome to your Lovable project
+# Union Contract Checker - NOC Dispatch Scheduler
 
-## Project info
+A tool to verify that dispatcher assignments follow contract rules with no guesswork. Built for union accountability.
 
-**URL**: https://lovable.dev/projects/97c8cfae-d316-4d34-be10-1ae3e9d87715
+## What This Does
 
-## How can I edit this code?
+This tool helps you:
+1. **Check who should be assigned to a vacancy** - The algorithm follows contract seniority rules
+2. **See seniority rankings** - Shows the exact order based on contract rules
+3. **Run "what-if" scenarios** - Mark people off and see who should cover
 
-There are several ways of editing your application.
+## Contract Rules Enforced
 
-**Use Lovable**
+The system follows these rules in order:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/97c8cfae-d316-4d34-be10-1ae3e9d87715) and start prompting.
+1. **Incumbent** - Person who owns the job
+2. **Hold-down** - Temporary job holder
+3. **Relief Line** - Pattern-based coverage
+4. **ATW (Around The World)** - Third shift rotation
+5. **Board (Extraboard)** - Overtime pool
 
-Changes made via Lovable will be committed automatically to this repo.
+Within each level, seniority determines who gets picked.
 
-**Use your preferred IDE**
+## Setup Instructions
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Step 1: Set up the Database
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Go to your Supabase dashboard: https://supabase.com/dashboard
+2. Navigate to your project: `rxvptkcgqftxfishbuta`
+3. Open the SQL Editor
+4. Copy and paste the contents of `setup_database.sql` and run it
+5. This creates all tables, rules, and sample data
 
-Follow these steps:
+### Step 2: Run the App
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open http://localhost:5173
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## How to Use
 
-**Use GitHub Codespaces**
+### Check Vacancies
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+1. Go to "Vacancy Checker" (home page)
+2. You'll see any open slots that need coverage
+3. Click on a vacancy to see **who the algorithm says should be assigned**
+4. The system shows:
+   - **Recommended person** with their seniority rank
+   - **Why they were chosen** (incumbent, seniority, etc.)
+   - **Rule checks** (qualified, HOS compliance, available)
+   - **Alternative candidates** if the first choice isn't available
 
-## What technologies are used for this project?
+### View Seniority
 
-This project is built with:
+1. Go to "Dispatcher Roster"
+2. See the complete seniority list
+3. This shows the exact order for job awards and board calls
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Run Scenarios
 
-## How can I deploy this project?
+To test "what if someone calls off":
 
-Simply open [Lovable](https://lovable.dev/projects/97c8cfae-d316-4d34-be10-1ae3e9d87715) and click on Share -> Publish.
+1. In your Supabase SQL Editor, add a mark-off:
+   ```sql
+   INSERT INTO mark_offs (employee_id, the_date, reason)
+   VALUES (
+     (SELECT id FROM employees WHERE emp_no = '1002'),
+     CURRENT_DATE + 1,
+     'SICK'
+   );
+   ```
+2. Refresh the vacancy checker
+3. You'll now see a vacancy for that person's shift
+4. Click it to see who should cover according to contract rules
 
-## Can I connect a custom domain to my Lovable project?
+## Sample Data Included
 
-Yes, you can!
+The system comes with:
+- 12 sample dispatchers with realistic seniority dates
+- 4 desks (EE3, CN3, BT2, WS1) in Coastal division
+- Qualifications showing who can work which desks
+- 4 job ownerships (regular assignments)
+- An extraboard (COA-3RD-XB) with 5 members
+- 14 days of schedule slots
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Understanding the Algorithm
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+When you click on a vacancy, the algorithm:
+
+1. **Finds all potential candidates** from these sources:
+   - Incumbent (if returning from temporary absence)
+   - Hold-down owner
+   - Relief line pattern
+   - ATW assignment
+   - Board members
+
+2. **Checks eligibility**:
+   - ✅ Qualified for the desk
+   - ✅ HOS compliant (15+ hours rest)
+   - ✅ Not marked off or on leave
+
+3. **Ranks by priority**:
+   - Band (incumbent > hold-down > relief > ATW > board)
+   - Seniority within each band
+   - Employee number for ties
+
+4. **Shows you the answer** with complete explanation
+
+## Comparing with Company Decisions
+
+To check if the company followed the rules:
+
+1. See what the algorithm recommends
+2. Compare with who the company actually assigned
+3. If they differ, the algorithm will show why (seniority, qualifications, etc.)
+
+## Key Files
+
+- `setup_database.sql` - Complete database setup (run this first!)
+- `supabase/migrations/` - Individual migration files (same content as setup_database.sql)
+- `supabase/functions/coverage-engine/` - The algorithm that picks candidates
+- `supabase/functions/apply-assignment/` - Function to apply an assignment
+- `src/pages/VacancyChecker.tsx` - UI to check vacancies
+- `src/pages/DispatcherRoster.tsx` - Seniority list
+
+## Need Help?
+
+The algorithm is based on the complete specification in the original requirements document. All business rules (seniority, HOS, qualifications, hold-downs, etc.) are enforced automatically.
+
+## Technical Notes
+
+- **Database**: PostgreSQL (via Supabase)
+- **Backend**: Supabase Edge Functions (TypeScript/Deno)
+- **Frontend**: React + Tailwind CSS
+- **Time Handling**: All times stored in UTC, displayed in local timezone
+- **HOS Rule**: Minimum 15 hours rest between duty periods (configurable in `config` table)

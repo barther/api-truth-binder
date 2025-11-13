@@ -1,4 +1,4 @@
-import { Calendar, Users, Clock, AlertTriangle, FileText, Settings, RotateCcw, Wrench, UserCheck } from "lucide-react"
+import { AlertTriangle, Users } from "lucide-react"
 import { NavLink } from "react-router-dom"
 import {
   Sidebar,
@@ -14,17 +14,8 @@ import {
 } from "@/components/ui/sidebar"
 
 const navigationItems = [
-  { title: "Desk Board", url: "/", icon: Calendar },
-  { title: "Schedule Board", url: "/schedule", icon: Calendar },
-  { title: "Dispatchers", url: "/dispatchers", icon: Users },
-  { title: "Tricks", url: "/tricks", icon: Clock },
-  { title: "Vacancies", url: "/vacancies", icon: AlertTriangle },
-  { title: "Hold-Downs", url: "/hold-downs", icon: Clock },
-  { title: "ATW Jobs", url: "/atw", icon: RotateCcw },
-  { title: "Admin → Desks", url: "/admin/desks", icon: Wrench },
-  { title: "Admin → Dispatchers", url: "/admin/dispatchers", icon: UserCheck },
-  { title: "Audit Log", url: "/audit", icon: FileText },
-  { title: "Settings", url: "/settings", icon: Settings },
+  { title: "Vacancy Checker", url: "/", icon: AlertTriangle, description: "See who should be assigned" },
+  { title: "Dispatcher Roster", url: "/dispatchers", icon: Users, description: "Seniority rankings" },
 ]
 
 export function AppSidebar() {
@@ -41,7 +32,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-medium text-sidebar-foreground/70">
-            {!collapsed && "NOC Dispatch Scheduler"}
+            {!collapsed && "Union Contract Checker"}
           </SidebarGroupLabel>
 
           <SidebarGroupContent>
@@ -59,7 +50,7 @@ export function AppSidebar() {
                             : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                         }`
                       }
-                      title={item.title === "ATW Jobs" ? "Around The World - Third-shift relief positions" : item.title}
+                      title={item.description || item.title}
                     >
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
