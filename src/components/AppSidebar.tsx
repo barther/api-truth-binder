@@ -1,4 +1,4 @@
-import { AlertTriangle, Users, UserCog, Building2 } from "lucide-react"
+import { AlertTriangle, Users, UserX, UserCog, Building2 } from "lucide-react"
 import { NavLink } from "react-router-dom"
 import {
   Sidebar,
@@ -16,6 +16,7 @@ import {
 const navigationItems = [
   { title: "Vacancy Checker", url: "/", icon: AlertTriangle, description: "See who should be assigned" },
   { title: "Dispatcher Roster", url: "/dispatchers", icon: Users, description: "Seniority rankings" },
+  { title: "Mark-Off Tool", url: "/mark-off", icon: UserX, description: "Mark someone off and run algorithm" },
   { title: "Manage Dispatchers", url: "/admin/dispatchers", icon: UserCog, description: "Add/edit dispatchers" },
   { title: "Manage Desks", url: "/admin/desks", icon: Building2, description: "Add/edit desks and tricks" },
 ]

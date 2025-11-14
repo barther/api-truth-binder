@@ -8,6 +8,7 @@ import VacancyChecker from "./pages/VacancyChecker";
 import DispatcherRoster from "./pages/DispatcherRoster";
 import DispatcherAdmin from "./pages/DispatcherAdmin";
 import DeskAdmin from "./pages/DeskAdmin";
+import MarkOffTool from "./pages/MarkOffTool";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/" element={<AppLayout />}>
             <Route index element={<VacancyChecker />} />
             <Route path="dispatchers" element={<DispatcherRoster />} />
+            <Route path="mark-off" element={<MarkOffTool />} />
             <Route path="admin/dispatchers" element={<DispatcherAdmin />} />
             <Route path="admin/desks" element={<DeskAdmin />} />
           </Route>
