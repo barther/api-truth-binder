@@ -304,8 +304,35 @@ export default function MarkOffTool() {
                             </p>
                             <p className="text-sm text-muted">Emp #{result.engineResult.recommendation.emp_no}</p>
                           </div>
-                          <Badge className="bg-ok text-white">{result.engineResult.recommendation.band}</Badge>
+                          <Badge variant={result.engineResult.recommendation.pay_basis === 'OVERTIME' ? 'destructive' : 'default'}>
+                            {result.engineResult.recommendation.pay_basis === 'OVERTIME' ? 'OT' : 'ST'}
+                          </Badge>
                         </div>
+
+                        {/* Order of Call Step */}
+                        <div className="mb-3 p-2 bg-background rounded text-sm">
+                          <span className="font-semibold text-info">{result.engineResult.recommendation.step_name}</span>
+                        </div>
+
+                        {/* Diversion Warning */}
+                        {result.engineResult.recommendation.is_diversion && (
+                          <div className="mb-3 p-2 bg-warning/10 border border-warning rounded text-sm">
+                            <p className="font-semibold text-warning">⚠ DIVERSION</p>
+                            {!result.engineResult.recommendation.eb_can_backfill && (
+                              <p className="text-xs mt-1 text-warning">No EB backfill - creates cascading vacancy</p>
+                            )}
+                            {result.engineResult.recommendation.eb_can_backfill && (
+                              <p className="text-xs mt-1">EB available to backfill original job</p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Rest Day Notice */}
+                        {result.engineResult.recommendation.on_rest_day && (
+                          <div className="mb-3 p-2 bg-info/10 border border-info rounded text-sm">
+                            <p className="text-info">📅 On rest day (offered as overtime)</p>
+                          </div>
+                        )}
 
                         <div className="grid grid-cols-2 gap-3 text-sm mb-3">
                           <div>
@@ -317,8 +344,8 @@ export default function MarkOffTool() {
                             <p className="font-semibold">{result.engineResult.recommendation.rest_hours}h</p>
                           </div>
                           <div>
-                            <span className="text-muted">Cost Score:</span>
-                            <p className="font-semibold">{result.engineResult.recommendation.cost.toFixed(2)}</p>
+                            <span className="text-muted">Pay Basis:</span>
+                            <p className="font-semibold">{result.engineResult.recommendation.pay_basis}</p>
                           </div>
                           <div>
                             <span className="text-muted">Source:</span>
@@ -354,12 +381,18 @@ export default function MarkOffTool() {
                           <p className="text-sm font-semibold mb-2">Alternative Candidates:</p>
                           <div className="space-y-2">
                             {result.engineResult.alternatives.map((alt: any, idx: number) => (
-                              <div key={idx} className="flex items-center justify-between text-sm border-l-2 border-muted pl-3 py-1">
-                                <span>{alt.name} (#{alt.emp_no})</span>
-                                <div className="flex items-center gap-2">
-                                  <Badge variant="outline" className="text-xs">{alt.band}</Badge>
-                                  <span className="text-muted">Rank #{alt.seniority_rank}</span>
+                              <div key={idx} className="text-sm border-l-2 border-muted pl-3 py-2">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="font-medium">{alt.name} (#{alt.emp_no})</span>
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant={alt.pay_basis === 'OVERTIME' ? 'destructive' : 'outline'} className="text-xs">
+                                      {alt.pay_basis === 'OVERTIME' ? 'OT' : 'ST'}
+                                    </Badge>
+                                    <span className="text-muted">Rank #{alt.seniority_rank}</span>
+                                  </div>
                                 </div>
+                                <div className="text-xs text-muted">{alt.step_name}</div>
+                                {alt.is_diversion && <span className="text-xs text-warning">⚠ Diversion</span>}
                               </div>
                             ))}
                           </div>

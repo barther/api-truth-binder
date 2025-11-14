@@ -71,55 +71,62 @@ serve(async (req) => {
       c.is_qualified && c.is_hos_ok && c.is_available
     ) || []
 
-    // Calculate cost for each candidate
+    // Build enhanced rule trace for each candidate
     const scoredCandidates = eligible.map((c: any) => {
-      let cost = 0
       const ruleTrace = {
-        band: c.band,
+        step: c.step_number,
+        stepName: c.step_name,
+        payBasis: c.pay_basis,
+        isDiversion: c.is_diversion,
         checks: [
           { name: 'QUAL', ok: c.is_qualified },
           { name: 'HOS', ok: c.is_hos_ok, detail: `${c.rest_hours}h rest` },
           { name: 'AVAILABLE', ok: c.is_available }
         ],
-        costBreakdown: {
-          baseBand: c.band === 'INCUMBENT' ? 0 : c.band === 'HOLD_DOWN' ? 1 : c.band === 'RELIEF_LINE' ? 2 : c.band === 'ATW' ? 3 : 4,
-          seniority: c.seniority_rank * 0.01, // Small weight for seniority within band
-          total: 0
-        }
+        diversionDetails: c.is_diversion ? {
+          currentlyAssignedSlotId: c.currently_assigned_slot_id,
+          ebCanBackfill: c.eb_can_backfill
+        } : null,
+        onRestDay: c.on_rest_day
       }
-
-      // Base cost from band (lower is better)
-      if (c.band === 'INCUMBENT') cost = 0
-      else if (c.band === 'HOLD_DOWN') cost = 1
-      else if (c.band === 'RELIEF_LINE') cost = 2
-      else if (c.band === 'ATW') cost = 3
-      else if (c.band === 'BOARD') cost = 4
-
-      // Tiny seniority tiebreaker within same band
-      cost += c.seniority_rank * 0.01
-
-      ruleTrace.costBreakdown.total = cost
 
       return {
         ...c,
-        cost,
         ruleTrace
       }
     })
 
-    // Sort by cost (ascending), then seniority rank
-    scoredCandidates.sort((a: any, b: any) => {
-      if (a.cost !== b.cost) return a.cost - b.cost
-      return a.seniority_rank - b.seniority_rank
-    })
+    // Candidates are already sorted by order of call from SQL
+    // No additional sorting needed
 
     const best = scoredCandidates[0] || null
     const alternatives = scoredCandidates.slice(1, 6) // Top 5 alternatives
 
     // Build response with explanation
-    const explanation = best ?
-      `${best.first_name} ${best.last_name} (Emp #${best.emp_no}) should be assigned via ${best.band}. Seniority rank: ${best.seniority_rank}. Rest hours: ${best.rest_hours}h.` :
-      'No eligible candidates found. Check qualifications, HOS compliance, and availability.'
+    let explanation = ''
+    if (best) {
+      explanation = `${best.first_name} ${best.last_name} (Emp #${best.emp_no}) should be assigned. `
+      explanation += `${best.step_name}. `
+      explanation += `Seniority rank: ${best.seniority_rank}. `
+      explanation += `Pay basis: ${best.pay_basis}. `
+
+      if (best.is_diversion) {
+        explanation += `This is a DIVERSION from their current assignment. `
+        if (best.eb_can_backfill) {
+          explanation += `EB is available to backfill their original job. `
+        } else {
+          explanation += `WARNING: No EB backfill available - creates cascading vacancy. `
+        }
+      }
+
+      if (best.on_rest_day) {
+        explanation += `Currently on rest day (offered as overtime). `
+      }
+
+      explanation += `Rest hours: ${best.rest_hours}h.`
+    } else {
+      explanation = 'No eligible candidates found. Check qualifications, HOS compliance, and availability.'
+    }
 
     const result = {
       slot: {
@@ -136,8 +143,13 @@ serve(async (req) => {
         name: `${best.first_name} ${best.last_name}`,
         seniority_rank: best.seniority_rank,
         source: best.source,
-        band: best.band,
-        cost: best.cost,
+        step_number: best.step_number,
+        step_name: best.step_name,
+        pay_basis: best.pay_basis,
+        is_diversion: best.is_diversion,
+        on_rest_day: best.on_rest_day,
+        currently_assigned_slot_id: best.currently_assigned_slot_id,
+        eb_can_backfill: best.eb_can_backfill,
         rest_hours: best.rest_hours,
         rule_trace: best.ruleTrace
       } : null,
@@ -147,8 +159,11 @@ serve(async (req) => {
         name: `${a.first_name} ${a.last_name}`,
         seniority_rank: a.seniority_rank,
         source: a.source,
-        band: a.band,
-        cost: a.cost,
+        step_number: a.step_number,
+        step_name: a.step_name,
+        pay_basis: a.pay_basis,
+        is_diversion: a.is_diversion,
+        on_rest_day: a.on_rest_day,
         rest_hours: a.rest_hours
       })),
       explanation,
