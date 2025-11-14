@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Loader2, CheckCircle2, XCircle, AlertCircle, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { CascadeDisplay } from '@/components/CascadeDisplay';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface Vacancy {
   schedule_slot_id: number;
@@ -43,7 +46,9 @@ export default function VacancyChecker() {
   const [loading, setLoading] = useState(true);
   const [selectedVacancy, setSelectedVacancy] = useState<Vacancy | null>(null);
   const [engineResult, setEngineResult] = useState<EngineResult | null>(null);
+  const [cascadeResult, setCascadeResult] = useState<any>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [useCascadeResolver, setUseCascadeResolver] = useState(true);
 
   useEffect(() => {
     loadVacancies();
@@ -71,14 +76,32 @@ export default function VacancyChecker() {
     setSelectedVacancy(vacancy);
     setAnalyzing(true);
     setEngineResult(null);
+    setCascadeResult(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('coverage-engine', {
-        body: { slot_id: vacancy.schedule_slot_id }
-      });
+      if (useCascadeResolver) {
+        // Use cascade resolver for full chain
+        const { data, error } = await supabase.functions.invoke('cascade-resolver', {
+          body: { slot_id: vacancy.schedule_slot_id }
+        });
 
-      if (error) throw error;
-      setEngineResult(data);
+        if (error) throw error;
+        setCascadeResult(data);
+
+        // Also get the simple recommendation for display
+        const { data: engineData, error: engineError } = await supabase.functions.invoke('coverage-engine', {
+          body: { slot_id: vacancy.schedule_slot_id }
+        });
+        if (!engineError) setEngineResult(engineData);
+      } else {
+        // Use simple coverage engine
+        const { data, error } = await supabase.functions.invoke('coverage-engine', {
+          body: { slot_id: vacancy.schedule_slot_id }
+        });
+
+        if (error) throw error;
+        setEngineResult(data);
+      }
     } catch (error: any) {
       toast.error('Failed to analyze vacancy: ' + error.message);
     } finally {
@@ -122,9 +145,21 @@ export default function VacancyChecker() {
           <h1 className="text-3xl font-bold">Vacancy Checker</h1>
           <p className="text-muted mt-1">Algorithm-based assignment recommendations</p>
         </div>
-        <Button onClick={loadVacancies} variant="outline">
-          Refresh
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="cascade-mode"
+              checked={useCascadeResolver}
+              onCheckedChange={setUseCascadeResolver}
+            />
+            <Label htmlFor="cascade-mode" className="text-sm cursor-pointer">
+              Show Full Cascade
+            </Label>
+          </div>
+          <Button onClick={loadVacancies} variant="outline">
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {vacancies.length === 0 ? (
@@ -337,6 +372,11 @@ export default function VacancyChecker() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Cascade Chain Display */}
+              {cascadeResult && (
+                <CascadeDisplay cascade={cascadeResult} />
+              )}
             ) : null}
           </div>
         </div>

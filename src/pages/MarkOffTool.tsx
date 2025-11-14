@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, UserX, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { CascadeDisplay } from '@/components/CascadeDisplay';
+import { Switch } from '@/components/ui/switch';
 
 interface Dispatcher {
   id: number;
@@ -41,6 +43,8 @@ export default function MarkOffTool() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [reason, setReason] = useState('SICK');
   const [result, setResult] = useState<MarkOffResult | null>(null);
+  const [cascadeResult, setCascadeResult] = useState<any>(null);
+  const [useCascadeResolver, setUseCascadeResolver] = useState(true);
 
   useEffect(() => {
     loadDispatchers();
@@ -104,6 +108,17 @@ export default function MarkOffTool() {
       }
 
       // Step 3: Run coverage engine
+      if (useCascadeResolver) {
+        // Use cascade resolver for full chain
+        const { data: cascadeData, error: cascadeError } = await supabase.functions.invoke('cascade-resolver', {
+          body: { slot_id: vacancyData.schedule_slot_id }
+        });
+
+        if (cascadeError) throw cascadeError;
+        setCascadeResult(cascadeData);
+      }
+
+      // Also get simple coverage for display
       const { data: engineData, error: engineError } = await supabase.functions.invoke('coverage-engine', {
         body: { slot_id: vacancyData.schedule_slot_id }
       });
@@ -164,9 +179,21 @@ export default function MarkOffTool() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Mark-Off Tool</h1>
-        <p className="text-muted mt-1">Mark a dispatcher off and see who should cover (algorithm-based)</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Mark-Off Tool</h1>
+          <p className="text-muted mt-1">Mark a dispatcher off and see who should cover (algorithm-based)</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Switch
+            id="cascade-mode-markoff"
+            checked={useCascadeResolver}
+            onCheckedChange={setUseCascadeResolver}
+          />
+          <Label htmlFor="cascade-mode-markoff" className="text-sm cursor-pointer">
+            Show Full Cascade
+          </Label>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -414,6 +441,11 @@ export default function MarkOffTool() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Cascade Chain Display */}
+              {cascadeResult && (
+                <CascadeDisplay cascade={cascadeResult} />
+              )}
             </>
           )}
         </div>
